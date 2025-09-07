@@ -5,8 +5,12 @@
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "android:dev": "npx expo prebuild --platform android --clean && rm -rf node_modules && yarn install && APP_VARIANT=development npx expo run:android",
+    "android:dev:release": "npx expo prebuild --platform android --clean && rm -rf node_modules && yarn install && APP_VARIANT=development npx expo run:android --variant release",
+    "ios:dev": "npx expo prebuild --platform ios --clean && rm -rf node_modules && yarn install && APP_VARIANT=development npx expo run:ios",
+    "ios:dev:release": "npx expo prebuild --platform ios --clean && rm -rf node_modules && yarn install && APP_VARIANT=development npx expo run:ios --configuration Release",
+    "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint"
   },
@@ -21,6 +25,7 @@
     "expo-font": "~13.3.2",
     "expo-haptics": "~14.1.4",
     "expo-image": "~2.4.0",
+    "expo-linear-gradient": "^14.1.5",
     "expo-linking": "~7.1.7",
     "expo-router": "~5.1.5",
     "expo-splash-screen": "~0.30.10",
@@ -33,7 +38,7 @@
     "react-native": "0.79.6",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-reanimated": "~3.17.4",
-    "react-native-safe-area-context": "5.4.0",
+    "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5"
@@ -41,9 +46,9 @@
   "devDependencies": {
     "@babel/core": "^7.25.2",
     "@types/react": "~19.0.10",
-    "typescript": "~5.8.3",
     "eslint": "^9.25.0",
-    "eslint-config-expo": "~9.2.0"
+    "eslint-config-expo": "~9.2.0",
+    "typescript": "~5.8.3"
   },
   "private": true
 }
