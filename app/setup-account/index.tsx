@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { useNavigationStore } from '@/src/store/navigationStore';
+import { useUserStore } from '@/src/store/userStore';
 import { colors, spacing, typography } from '@/src/utils/theme';
 import { decode } from 'base64-arraybuffer';
 import * as FileSystem from 'expo-file-system';
@@ -16,6 +17,7 @@ export default function SetupAccountScreen() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [image, setImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const setUserProfile = useUserStore(state => state.setUserProfile);
 
   const validateName = (value: string) => {
     if (!value.trim()) {
@@ -194,6 +196,8 @@ export default function SetupAccountScreen() {
         throw profileError;
       }
       
+      const {data} = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      setUserProfile(data);
       // Profile saved successfully - now navigate
       setActiveStack('home');
     } catch (error) {

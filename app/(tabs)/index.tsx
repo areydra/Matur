@@ -1,104 +1,201 @@
-import { Image } from 'expo-image';
-import { Platform, Pressable, StyleSheet, Text } from 'react-native';
+import { useHome } from '@/hooks/screens/useHome';
+import Avatar from '@/src/components/Avatar';
+import ChatListItem from '@/src/components/ChatListItem';
+import SearchInput from '@/src/components/SearchInput';
+import { colors, fonts, spacing, typography } from '@/src/utils/theme';
+import { Ionicons } from '@expo/vector-icons';
+import React from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { supabase } from '@/lib/supabase';
-import { useNavigationStore } from '@/src/store/navigationStore';
-import { useUserStore } from '@/src/store/userStore';
-import { colors, typography } from '@/src/utils/theme';
+const HomeScreen: React.FC = () => {
+  const {
+    userProfile,
+    filteredChats,
+    searchQuery,
+    isSearchMode,
+    isLoading,
+    handleSearch,
+    toggleSearchMode,
+    handleChatPress,
+    handleProfilePress,
+  } = useHome();
 
-export default function HomeScreen() {
-  const clearUser = useUserStore((state) => state.clearUser);
-  const resetToOnboarding = useNavigationStore((state) => state.resetToOnboarding);
+  const renderChatItem = ({ item }: { item: { chat: any; participant: any } }) => (
+    <ChatListItem
+      chat={item.chat}
+      participant={item.participant}
+      onPress={handleChatPress}
+    />
+  );
+
+  const renderSeparator = () => <View style={styles.separator} />;
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="chatbubbles-outline" size={64} color={colors.textSecondary} />
+      <Text style={styles.emptyText}>
+        {searchQuery 
+          ? `No chats found for "${searchQuery}"`
+          : 'No chats yet. Start a conversation!'
+        }
+      </Text>
+    </View>
+  );
 
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-        <Pressable
-          onPress={() => {
-            resetToOnboarding();
-            supabase.auth.signOut();
-            clearUser();
-          }}
-          style={{
-            backgroundColor: colors.red,
-            padding: 20,
-            borderRadius: 20
-          }}
-        >
-          <Text
-            style={{
-              ...typography.subtitle,
-              color: colors.white,
-              textAlign: 'center',
-            }}
-          >
-            Logout
-          </Text>
-        </Pressable>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          {isSearchMode ? (
+            <View style={styles.searchContainer}>
+              <View style={styles.searchInputContainer}>
+                <SearchInput
+                  value={searchQuery}
+                  onChangeText={handleSearch}
+                  placeholder="Search chats..."
+                />
+              </View>
+              <TouchableOpacity
+                style={styles.closeSearchButton}
+                onPress={toggleSearchMode}
+              >
+                <Ionicons name="close" size={24} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={styles.userSection}
+                onPress={handleProfilePress}
+                activeOpacity={0.7}
+              >
+                <Avatar
+                  uri={userProfile?.avatar_url}
+                  name={userProfile?.name ??''}
+                  size="medium"
+                />
+                <View style={styles.userInfo}>
+                  <Text style={styles.userName}>
+                    {userProfile?.name}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.searchButton}
+                onPress={toggleSearchMode}
+              >
+                <Ionicons name="search" size={24} color={colors.white} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+    {(isLoading || !userProfile) ? (
+      <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        </SafeAreaView>
+    ) : (
+      <FlatList
+        style={styles.chatList}
+        contentContainerStyle={styles.chatListContent}
+        data={filteredChats}
+        renderItem={renderChatItem}
+        keyExtractor={(item) => item.chat.id}
+        ItemSeparatorComponent={renderSeparator}
+        ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
+      />
+    )}
+    </SafeAreaView>
   );
-}
+};
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: colors.purpleSoft,
+  },
+  header: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
+  },
+  headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  userInfo: {
+    marginLeft: 14,
+    flex: 1,
+  },
+  userName: {
+    ...typography.subtitle,
+    fontSize: 18,
+    lineHeight: 24,
+    color: colors.white,
+  },
+  searchButton: {
+    padding: spacing.sm,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  searchInputContainer: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  closeSearchButton: {
+    padding: spacing.sm,
+  },
+  chatList: {
+    flex: 1,
+    backgroundColor: colors.background,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  chatListContent: {
+    paddingBottom: spacing.lg,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: fonts.regular,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: spacing.md,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.purpleSoft,
+    marginHorizontal: spacing.lg,
+    opacity: 0.3,
   },
 });

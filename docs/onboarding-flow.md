@@ -136,31 +136,54 @@ interface NavigationStore {
 
 #### 4.2 src/store/userStore.ts - User State Management
 
-**Role**: Manages user authentication state and profile data.
+**Role**: Comprehensive user state management including authentication, profile data, and chat functionality.
 
 **Key Functionality**:
-- **User Data Storage**: Stores Supabase user object
-- **Authentication State**: Manages user login/logout state
-- **Profile Management**: Handles user profile updates
+- **User Authentication**: Stores Supabase user object for auth state
+- **Profile Management**: Separate storage for detailed user profile with extended fields
+- **Chat Management**: Handles user chats, messages, and chat updates
+- **Loading States**: Manages loading indicators for async operations
+- **Data Persistence**: Maintains user state across app sessions
 
-**Store Structure**:
+**Enhanced Store Structure**:
 ```tsx
 interface UserStore {
   user: User | null;
+  userProfile: UserProfile | null;
+  chats: Chat[];
+  isLoading: boolean;
   setUser: (user: User | null) => void;
-  updateUserData: (user: User, isProfileCompleted: boolean) => void;
+  setUserProfile: (profile: UserProfile | null) => void;
+  updateUserProfile: (updates: Partial<UserProfile>) => void;
+  setChats: (chats: Chat[]) => void;
+  addChat: (chat: Chat) => void;
+  updateChat: (chatId: string, updates: Partial<Chat>) => void;
+  setLoading: (loading: boolean) => void;
   clearUser: () => void;
 }
 ```
 
+**Profile Management**:
+- **setUserProfile**: Sets complete user profile data
+- **updateUserProfile**: Partial updates to profile fields
+- **Profile Fields**: Extended data including name, avatar, phone, description, timestamps
+
+**Chat Functionality**:
+- **setChats**: Initialize user's chat list
+- **addChat**: Add new chat to the top of the list
+- **updateChat**: Update specific chat properties (unread count, last message, etc.)
+
 **Integration Points**:
-- Login screen: Sets user after successful authentication
-- Setup account: Updates user profile data
-- Logout: Clears user state
+- Login screen: Sets user and fetches profile data
+- Setup account: Creates and updates user profile
+- Profile screen: Manages profile editing and updates
+- Chat system: Handles chat state and message management
+- Logout: Comprehensive state clearing including chats and profile
 
 **Dependencies**:
 - `zustand` - State management library
 - `@supabase/supabase-js` - Supabase user types
+- `../types` - Custom UserProfile, Chat, and ChatMessage interfaces
 
 ## Flow Steps
 
@@ -172,30 +195,75 @@ interface UserStore {
 - **Font Loading**: Loads custom Montserrat font family variants (Regular, Medium, SemiBold, Bold) plus SpaceMono
 - **Splash Screen Management**: Configures and controls the app splash screen with fade animation (300ms duration)
 - **Status Bar Configuration**: Sets status bar style to 'light' for consistent UI appearance
-- **Conditional Navigation**: Uses `Stack.Protected` guards to route users based on `isLoggedIn` status
+- **Enhanced Authentication Logic**: Real-time authentication state checking with Supabase session management
+- **Profile Completion Checking**: Uses `hasCompletedProfile()` to determine user setup status
+- **Dynamic Navigation**: Uses Zustand store with `Stack.Protected` guards to route based on `activeStack` state
+- **Auth State Subscription**: Listens to authentication changes for real-time navigation updates
 
-**Code Example**:
+**Enhanced Authentication Setup**:
 ```tsx
-const [loaded] = useFonts({
-  SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  'Montserrat-Regular': require('../assets/fonts/Montserrat-Regular.ttf'),
-  'Montserrat-Medium': require('../assets/fonts/Montserrat-Medium.ttf'),
-  'Montserrat-SemiBold': require('../assets/fonts/Montserrat-SemiBold.ttf'),
-  'Montserrat-Bold': require('../assets/fonts/Montserrat-Bold.ttf'),
-});
+// Zustand store integration for dynamic navigation
+const { setUser, clearUser } = useUserStore();
+const { activeStack, setActiveStack, resetToOnboarding } = useNavigationStore();
+const setUserProfile = useUserStore(state => state.setUserProfile);
 
-const isLoggedIn = false;
+// Real-time auth state checking
+const checkUser = async () => {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      resetToOnboarding();
+      clearUser();
+      return;
+    }
+    
+    const isAuthenticated = !!data.session;
+    if (isAuthenticated && data.session?.user) {
+      const profileCompleted = await hasCompletedProfile(data.session.user.id);
+      await fetchUserProfile(data.session.user.id);
+      setUser(data.session.user);
+      setActiveStack(profileCompleted ? 'home' : 'setup_account');
+    } else {
+      clearUser();
+    }
+  } catch (error) {
+    resetToOnboarding();
+    clearUser();
+  }
+};
 ```
 
-**Authentication Logic**:
-- When `isLoggedIn = true`: User is routed to `(tabs)` - the main app tabs
-- When `isLoggedIn = false`: User is routed to `onboarding` - the onboarding flow
+**Dynamic Navigation Logic**:
+- **activeStack = 'onboarding'**: New users or signed-out users go to onboarding flow
+- **activeStack = 'setup_account'**: Authenticated users without completed profiles
+- **activeStack = 'home'**: Authenticated users with completed profiles go to main app
+- **Real-time Updates**: Auth state changes automatically update navigation via subscription
+
+**Auth State Subscription**:
+```tsx
+supabase.auth.onAuthStateChange(async (event, session) => {
+  const isAuthenticated = !!session;
+  
+  if (isAuthenticated && event === 'SIGNED_IN' && session?.user) {
+    const profileCompleted = await hasCompletedProfile(session.user.id);
+    await fetchUserProfile(session.user.id);
+    setUser(session.user);
+    setActiveStack(profileCompleted ? 'home' : 'setup_account');
+  } else if (!isAuthenticated) {
+    clearUser();
+  }
+});
+```
 
 **Dependencies**:
 - `expo-font` for font loading
 - `expo-router/Stack` for navigation structure
 - `expo-splash-screen` for splash screen management
 - `expo-status-bar` for status bar styling
+- `@/lib/supabase` - Supabase client and `hasCompletedProfile()` helper
+- `@/src/store/userStore` - User and profile state management
+- `@/src/store/navigationStore` - Navigation stack management
+- `@/src/components/Header` - Custom header component
 
 ### 2. app/onboarding/ - Onboarding Route Folder
 
@@ -369,19 +437,33 @@ graph TD;
 ## Configurations and Dependencies
 
 ### Required Dependencies
+
+**Core Framework & Navigation**:
 - **expo-font**: Font loading and management
 - **expo-router**: File-based routing and navigation
 - **expo-splash-screen**: Splash screen control
 - **expo-status-bar**: Status bar styling
-- **react-native-reanimated**: Animation support
-- **@supabase/supabase-js**: Backend authentication and database
+- **react-native-reanimated**: Animation support for transitions
+
+**Authentication & Backend**:
+- **@supabase/supabase-js**: Backend authentication, database, and storage
 - **@react-native-google-signin/google-signin**: Google OAuth integration
-- **zustand**: State management for navigation and user data
-- **expo-image-picker**: Image selection functionality
+- **react-native-mmkv**: Secure, encrypted storage for auth tokens
+
+**State Management**:
+- **zustand**: Global state management for navigation, user data, and chats
+
+**Image & Media Handling**:
+- **expo-image-picker**: Image selection functionality for profile photos
 - **expo-file-system**: File system operations for image processing
-- **base64-arraybuffer**: Base64 to ArrayBuffer conversion
-- **expo-linear-gradient**: Gradient styling for buttons
-- **expo-image**: Optimized image rendering
+- **base64-arraybuffer**: Base64 to ArrayBuffer conversion for uploads
+- **expo-image**: Optimized image rendering and caching
+
+**UI Components & Styling**:
+- **expo-linear-gradient**: Gradient styling for buttons and backgrounds
+
+**Development & Types**:
+- **typescript**: Type safety and development experience
 
 ### Font Assets
 - SpaceMono-Regular.ttf
@@ -401,22 +483,92 @@ graph TD;
 ### Environment Variables
 - **EXPO_PUBLIC_SUPABASE_URL**: Supabase project URL
 - **EXPO_PUBLIC_SUPABASE_ANON_KEY**: Supabase anonymous API key
+- **EXPO_PUBLIC_MMKV_ENCRYPTION_KEY**: MMKV encryption key for secure token storage
 - **GOOGLE_WEB_CLIENT_ID**: Google OAuth web client ID
 - **GOOGLE_IOS_CLIENT_ID**: Google OAuth iOS client ID
 
+**Required .env Setup**:
+```env
+EXPO_PUBLIC_SUPABASE_URL=your_supabase_url
+EXPO_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+EXPO_PUBLIC_MMKV_ENCRYPTION_KEY=your_32_character_encryption_key
+```
+
 ### Supabase Configuration
-- **Authentication**: Google OAuth provider setup
+- **Authentication**: Google OAuth provider setup with MMKV encrypted token storage
 - **Storage Bucket**: 'avatars' bucket for profile images
-- **Database Table**: 'profiles' table for user profile data
+- **Database Table**: 'profiles' table for user profile data with enhanced schema
 - **Row Level Security**: Configured for user data protection
+- **Token Management**: MMKV storage for large auth tokens with encryption
+- **Profile Completion**: Helper function `hasCompletedProfile()` for setup flow control
+- **Auto Refresh**: Automatic token refresh on app state changes
+
+**MMKV Storage Configuration**:
+```tsx
+const authStorage = new MMKV({
+  id: 'auth-storage',
+  encryptionKey, // From EXPO_PUBLIC_MMKV_ENCRYPTION_KEY
+});
+
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    storage: {
+      getItem: (key: string) => authStorage.getString(key),
+      setItem: (key: string, value: string) => authStorage.set(key, value),
+      removeItem: (key: string) => authStorage.delete(key),
+    },
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
+```
+
+**Profile Completion Helper**:
+```tsx
+export const hasCompletedProfile = async (userId: string) => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('name')
+    .eq('id', userId)
+    .maybeSingle();
+    
+  return !!(data && data.name);
+};
+```
 
 ### TypeScript Interfaces
-- `ProductTourSlide`: Slide data structure
-- `ProductTourProps`: Component props for ProductTour
+
+**Core Onboarding Types**:
+- `ProductTourSlide`: Slide data structure for onboarding presentation
+- `ProductTourProps`: Component props for ProductTour component
+- `OnboardingButtonProps`: Button component props for navigation
+- `PageIndicatorProps`: Page indicator component props
+
+**User and Profile Types**:
+- `UserProfile`: Extended user profile with name, avatar, phone, description, timestamps
+- `User`: Supabase user type from @supabase/supabase-js for authentication
+
+**Chat and Messaging Types**:
+- `Chat`: Chat room structure with participants and metadata
+- `ChatMessage`: Individual message structure with content and metadata
+- `ChatParticipant`: Chat participant relationship data
+- `ChatListItemProps`: Component props for chat list items
+
+**Store Interface Types**:
+- `UserStore`: Enhanced Zustand user store with profile and chat management
 - `NavigationStore`: Zustand navigation store interface
-- `UserStore`: Zustand user store interface
-- `NavigationStack`: Union type for navigation states
-- `User`: Supabase user type from @supabase/supabase-js
+- `NavigationStack`: Union type for navigation states ('onboarding' | 'setup_account' | 'home')
+
+**Avatar and Cache Types**:
+- `AvatarProps`: Avatar component configuration and display options
+- `CacheMetadata`: Cache management for avatar images
+- `AvatarLoadResult`: Avatar loading result with cache information
+- `AvatarServiceConfig`: Avatar service configuration options
+
+**Component Props**:
+- `SearchInputProps`: Search input component interface
+- `BadgeProps`: Badge component for unread counts and notifications
 
 ## Potential Issues and Troubleshooting
 
@@ -443,9 +595,11 @@ graph TD;
 
 4. **Supabase Connection Issues**
    - **Problem**: Authentication or database operations fail
-   - **Solution**: Verify environment variables (SUPABASE_URL, SUPABASE_ANON_KEY) are set correctly
+   - **Solution**: Verify environment variables (SUPABASE_URL, SUPABASE_ANON_KEY, MMKV_ENCRYPTION_KEY) are set correctly
    - **Debug**: Check network connectivity and Supabase project status
    - **Check**: Ensure Google provider is enabled in Supabase Auth settings
+   - **MMKV Issues**: Verify encryption key is exactly 32 characters, check MMKV permissions
+   - **Token Storage**: Clear MMKV storage if experiencing auth persistence issues
 
 5. **Image Upload Failures**
    - **Problem**: Profile image upload fails in setup-account screen
@@ -461,31 +615,64 @@ graph TD;
    - **Solution**: Check Zustand store state updates and verify navigation logic
    - **Debug**: Use React DevTools to monitor store state changes
    - **Reset**: Use `resetToOnboarding()` for error recovery
+   - **Profile Completion**: Verify `hasCompletedProfile()` returns correct boolean
+   - **Auth State Sync**: Ensure auth state changes trigger proper navigation updates
 
 7. **TypeScript Errors**
    - **Problem**: Type mismatches in stores or component props
    - **Solution**: Verify interface definitions match implementation
    - **Debug**: Check import paths for type definitions and Zustand store types
+   - **New Types**: Ensure UserProfile, Chat, and ChatMessage interfaces are properly imported
+   - **Store Types**: Verify enhanced UserStore interface matches implementation
 
-8. **Platform-Specific Issues**
+8. **Profile Completion and Store Issues**
+   - **Problem**: User gets stuck in setup-account flow despite completing profile
+   - **Solution**: Verify `hasCompletedProfile()` checks the correct fields and database table
+   - **Debug**: Check profile data in Supabase dashboard, ensure name field is populated
+   - **Store Sync**: Ensure `setUserProfile()` is called after profile creation
+   - **Navigation**: Verify `setActiveStack('home')` is called after successful profile completion
+
+9. **MMKV Storage and Token Issues**
+   - **Problem**: Authentication state not persisting across app restarts
+   - **Solution**: Verify MMKV encryption key is set and consistent across sessions
+   - **Debug**: Check MMKV storage permissions and encryption key length (must be 32 characters)
+   - **Token Corruption**: Clear MMKV storage if experiencing persistent auth issues
+   - **Background Sync**: Ensure `AppState` listener is working for token refresh
+
+10. **Platform-Specific Issues**
    - **Problem**: iOS crashes during image picker (iPhone 15 Pro + Face ID)
    - **Solution**: Use `UIImagePickerPresentationStyle.AUTOMATIC` in ImagePicker config
    - **Problem**: Android Google Sign-In issues
    - **Solution**: Verify SHA-1 certificate fingerprint in Google Console
 
 ### Best Practices
+
+**Authentication & Security**:
 - Always handle font loading states before rendering UI
 - Use `router.replace()` instead of `router.push()` for onboarding completion to prevent back navigation
-- Implement proper error boundaries for asset loading failures
+- Handle authentication state changes gracefully with proper cleanup in useEffect hooks
+- Secure MMKV encryption keys and never commit them to version control
+- Implement proper auth state subscription cleanup to prevent memory leaks
+
+**State Management**:
 - Use Zustand stores for navigation state management instead of local component state
+- Separate user authentication (`user`) from profile data (`userProfile`) in stores
+- Clear all user-related state comprehensively on logout (user, profile, chats)
+- Use proper TypeScript types for all store interactions
+
+**Error Handling & UX**:
+- Implement proper error boundaries for asset loading failures
 - Implement retry logic for network operations (especially image uploads)
 - Validate user input in real-time for better UX
-- Handle authentication state changes gracefully
 - Use proper loading states during async operations
 - Implement comprehensive error handling with user-friendly messages
 - Follow platform-specific guidelines for image picker configuration
-- Use proper TypeScript types for all store interactions
-- Implement proper cleanup in useEffect hooks for auth state listeners
+
+**Profile & Chat Management**:
+- Verify profile completion with `hasCompletedProfile()` before navigation
+- Use `setUserProfile()` after successful profile creation
+- Handle chat state updates efficiently to prevent unnecessary re-renders
+- Implement proper avatar caching for better performance
 
 ### Future Enhancements
 - Add social login options beyond Google (Apple, Facebook, Twitter)

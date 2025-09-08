@@ -1,4 +1,5 @@
 import { hasCompletedProfile, supabase } from '@/lib/supabase';
+import Header from '@/src/components/Header';
 import { useNavigationStore } from '@/src/store/navigationStore';
 import { useUserStore } from '@/src/store/userStore';
 import { useFonts } from 'expo-font';
@@ -30,6 +31,7 @@ export default function RootLayout() {
   // User store for profile completion and user data
   const { setUser, clearUser } = useUserStore();
   const { activeStack, setActiveStack, resetToOnboarding } = useNavigationStore();
+  const setUserProfile = useUserStore(state => state.setUserProfile);
 
   useEffect(function handleSplashScreen() {
     if (!loaded) {
@@ -55,8 +57,8 @@ export default function RootLayout() {
       // If user just signed in, check if they need to complete profile setup
       if (isAuthenticated && event === 'SIGNED_IN' && session?.user) {
         const profileCompleted = await hasCompletedProfile(session.user.id);
-        console.log('profileCompleted', profileCompleted);
         // Update the store with user data and profile completion status
+        await fetchUserProfile(session.user.id);
         setUser(session.user);
         setActiveStack(profileCompleted ? 'home' : 'setup_account');
       } else if (!isAuthenticated) {
@@ -72,6 +74,11 @@ export default function RootLayout() {
     };
   }, [])
 
+  const fetchUserProfile = async (userId: string) => {
+    const {data} = await supabase.from('profiles').select('*').eq('id', userId).single();
+    setUserProfile(data);
+  }
+
   const checkUser = async () => {
     try {
       const { data, error } = await supabase.auth.getSession();
@@ -85,13 +92,12 @@ export default function RootLayout() {
       
       // User is logged in if session exists
       const isAuthenticated = !!data.session;
-      
-      console.log('isAuthenticated', isAuthenticated, data.session?.user);
-      
+            
       // If user is authenticated, check if they have completed their profile
       if (isAuthenticated && data.session?.user) {
         const profileCompleted = await hasCompletedProfile(data.session.user.id);
         // Update the store with user data and profile completion status
+        await fetchUserProfile(data.session.user.id);
         setUser(data.session.user);
         setActiveStack(profileCompleted ? 'home' : 'setup_account');
       } else {
@@ -124,6 +130,13 @@ export default function RootLayout() {
       </Stack.Protected>
       <Stack.Protected guard={activeStack === 'home'}>
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen
+          name="profile"
+          options={{
+            headerShown: true,
+            header: () => <Header/>,
+          }}
+        />
       </Stack.Protected>
       <Stack.Screen name="+not-found" />
     </Stack>
