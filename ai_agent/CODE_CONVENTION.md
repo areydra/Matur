@@ -24,7 +24,6 @@ You are a React Native development agent tasked with building a project template
 A complete React Native project template with an optimized **expo-router** folder structure, sample code, separate `styles.ts` files, navigation using **expo-router**, state management using **Zustand**, API calls using **@tanstack/react-query**.
 
 ---
-
 ## Project Template
 
 ### Folder Structure
@@ -36,6 +35,7 @@ my-react-native-app/
 │   ├── home/
 │   │   ├── _layout.tsx
 │   │   ├── index.tsx
+│   │   ├── useHome.ts
 │   │   └── styles.ts
 │   ├── about/
 │   │   ├── _layout.tsx
@@ -136,26 +136,13 @@ export default HomeLayout;
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Link } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import { fetchData } from '../../src/services/queries';
 import Button from '../../src/components/Button';
-import { useDataStore } from '../../src/store/store';
+import { useHome } from './useHome';
 import { styles } from './styles';
 
-// Home route with expo-router, Zustand, and @tanstack/react-query
+// Home route with expo-router, using specific custom hook for logic encapsulation
 const HomeScreen: React.FC = () => {
-  const { setData } = useDataStore();
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ['sampleData'],
-    queryFn: fetchData,
-  });
-
-  // Update Zustand store when data is fetched
-  React.useEffect(() => {
-    if (data) {
-      setData(data);
-    }
-  }, [data, setData]);
+  const { data, isLoading, refetch } = useHome();
 
   return (
     <View style={styles.container}>
@@ -174,6 +161,33 @@ const HomeScreen: React.FC = () => {
 };
 
 export default HomeScreen;
+```
+
+#### app/home/useHome.ts
+```ts
+// app/home/useHome.ts
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { fetchData } from '../../src/services/queries';
+import { useDataStore } from '../../src/store/store';
+
+// Specific custom hook for Home route to encapsulate data fetching, state updates, and effects
+export const useHome = () => {
+  const { setData } = useDataStore();
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['sampleData'],
+    queryFn: fetchData,
+  });
+
+  // Update Zustand store when data is fetched
+  useEffect(() => {
+    if (data) {
+      setData(data);
+    }
+  }, [data, setData]);
+
+  return { data, isLoading, refetch };
+};
 ```
 
 #### app/home/styles.ts
@@ -199,6 +213,70 @@ export const styles = StyleSheet.create({
   data: {
     marginTop: 20,
     fontSize: 16,
+    color: colors.text,
+  },
+});
+```
+
+#### app/about/_layout.tsx
+```tsx
+// app/about/_layout.tsx
+import { Stack } from "expo-router";
+import React from "react";
+
+const AboutLayout = () => {
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
+    </Stack>
+  );
+};
+
+export default AboutLayout;
+```
+
+#### app/about/index.tsx
+```tsx
+// app/about/index.tsx
+import React from 'react';
+import { View, Text } from 'react-native';
+import { Link } from 'expo-router';
+import Button from '../../src/components/Button';
+import { styles } from './styles';
+
+// About route with expo-router (simple, no custom hook needed for this minimal example)
+const AboutScreen: React.FC = () => {
+  return (
+    <View style={styles.container}>
+      <Text style={styles.title}>About Page</Text>
+      <Link href="/home" asChild>
+        <Button title="Go to Home" onPress={() => {}} />
+      </Link>
+    </View>
+  );
+};
+
+export default AboutScreen;
+```
+
+#### app/about/styles.ts
+```ts
+// app/about/styles.ts
+import { StyleSheet } from 'react-native';
+import { colors } from '../../src/utils/theme';
+
+// Separated styles for About route to ensure modularity and reusability
+export const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
     color: colors.text,
   },
 });
@@ -441,6 +519,7 @@ describe('Button Component', () => {
 - `app/` - Expo Router navigation routes (e.g., `app/home/index.tsx`, `app/about/index.tsx`).
 - `app/*/_layout.tsx` - Expo Router layout file.
 - `app/*/index.tsx` - Route logic.
+- `app/*/use*.ts` - Specific custom hooks for routes/components where needed (e.g., `app/home/useHome.ts`).
 - `app/*/styles.ts` - Route-specific styles.
 - `src/components/*/index.tsx` - Component logic (e.g., Button/index.tsx).
 - `src/components/*/styles.ts` - Component-specific styles.
@@ -461,6 +540,7 @@ describe('Button Component', () => {
 - **Performance**: Memoization with `React.memo` and `useCallback`.
 - **Error Handling**: ErrorBoundary for graceful error recovery.
 - **Testing**: Jest and React Native Testing Library for unit tests.
+- **Custom Hooks**: Specific custom hook (`useHome.ts`) added for the Home route to encapsulate fetching and state logic, demonstrating file-specific hook usage. Reusable hooks would be placed in `src/hooks/` if needed for cross-file sharing.
 
 ## Example Usage
 ```tsx
