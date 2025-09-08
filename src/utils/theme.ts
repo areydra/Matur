@@ -14,8 +14,11 @@ export const colors = {
     active: '#635FF6',
     inactive: '#352A8F',
   },
+  purpleSoft: '#220C61',
   purpleLight: '#352A8F',
   blue: '#635FF6',
+  blueLight: '#9790CC',
+  red: '#F93888',
 };
 
 export const gradients = {
@@ -63,6 +66,11 @@ export const typography = {
     fontSize: 14,
     fontFamily: 'Montserrat-Medium',
     lineHeight: 20,
+  },
+  sm: {
+    fontSize: 10,
+    fontFamily: 'Montserrat-Regular',
+    lineHeight: 16,
   },
 };
 

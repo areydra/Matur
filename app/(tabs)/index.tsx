@@ -1,12 +1,19 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
+import { supabase } from '@/lib/supabase';
+import { useNavigationStore } from '@/src/store/navigationStore';
+import { useUserStore } from '@/src/store/userStore';
+import { colors, typography } from '@/src/utils/theme';
 
 export default function HomeScreen() {
+  const clearUser = useUserStore((state) => state.clearUser);
+  const resetToOnboarding = useNavigationStore((state) => state.resetToOnboarding);
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -16,6 +23,28 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+        <Pressable
+          onPress={() => {
+            resetToOnboarding();
+            supabase.auth.signOut();
+            clearUser();
+          }}
+          style={{
+            backgroundColor: colors.red,
+            padding: 20,
+            borderRadius: 20
+          }}
+        >
+          <Text
+            style={{
+              ...typography.subtitle,
+              color: colors.white,
+              textAlign: 'center',
+            }}
+          >
+            Logout
+          </Text>
+        </Pressable>
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />

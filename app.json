@@ -9,7 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.matur",
+      "appleTeamId": "B7ZY9LU2V2"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +35,38 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#0E0A47"
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static",
+            "extraPods": [
+              {
+                "name": "simdjson",
+                "configurations": [
+                  "Debug",
+                  "Release"
+                ],
+                "path": "../node_modules/@nozbe/simdjson",
+                "modular_headers": true
+              }
+            ]
+          }
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.260927430287-jjc4ai03n5mln36mbtpg17o5q3s1vf47"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app would like to access your photos to allow you to select a profile picture.",
+          "cameraPermission": "The app would like to access your camera to allow you to take a profile picture."
         }
       ]
     ],

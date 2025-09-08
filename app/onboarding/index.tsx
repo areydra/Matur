@@ -26,15 +26,11 @@ export default function OnboardingRoute() {
   ];
 
   const handleComplete = () => {
-    console.log('Navigate to login screen');
-    // For now, navigate to the main tabs - replace with login when implemented
-    router.replace('/(tabs)');
+    router.push('/onboarding/login');
   };
 
   const handleSkip = () => {
-    console.log('Skip onboarding, navigate to login screen');
-    // For now, navigate to the main tabs - replace with login when implemented
-    router.replace('/(tabs)');
+    router.push('/onboarding/login');
   };
 
   return (
