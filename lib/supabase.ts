@@ -1,20 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
-import { MMKV } from 'react-native-mmkv';
-
-// Initialize MMKV instance for auth storage
-const encryptionKey = process.env.EXPO_PUBLIC_MMKV_ENCRYPTION_KEY;
-
-if (!encryptionKey) {
-  throw new Error(
-    'Missing MMKV encryption key. Please add EXPO_PUBLIC_MMKV_ENCRYPTION_KEY to your .env file.'
-  );
-}
-
-const authStorage = new MMKV({
-  id: 'auth-storage',
-  encryptionKey, // From environment variable
-});
+import * as storage from './authStorage';
 
 // Environment variables from .env file
 export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
@@ -28,21 +14,19 @@ if (!supabaseUrl || !supabaseKey) {
   );
 }
 
-// Initialize Supabase client with MMKV for token storage (handles large tokens)
+// Initialize Supabase client with platform-specific storage
 export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     storage: {
-      getItem: (key: string) => {
-        const value = authStorage.getString(key);
-        return Promise.resolve(value || null);
+      getItem: async (key: string) => {
+        const value = await storage.getItem(key);
+        return value || null;
       },
-      setItem: (key: string, value: string) => {
-        authStorage.set(key, value);
-        return Promise.resolve();
+      setItem: async (key: string, value: string) => {
+        await storage.setItem(key, value);
       },
-      removeItem: (key: string) => {
-        authStorage.delete(key);
-        return Promise.resolve();
+      removeItem: async (key: string) => {
+        await storage.removeItem(key);
       },
     },
     autoRefreshToken: true,

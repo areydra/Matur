@@ -36,7 +36,7 @@ The main service class that handles:
 - Cache validation and cleanup
 - Background synchronization
 
-### 2. Storage Utilities (`src/utils/storage.ts`)
+### 2. Storage Utilities (`src/utils/avatarStorage.ts`)
 Helper functions for:
 - MMKV metadata storage
 - File system operations

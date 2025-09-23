@@ -39,8 +39,8 @@ export interface CacheMetadata {
 export const ensureCacheDirectory = async (): Promise<void> => {
   const dirInfo = await FileSystem.getInfoAsync(AVATAR_CACHE_DIR);
   if (!dirInfo.exists) {
-    await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIR, { 
-      intermediates: true 
+    await FileSystem.makeDirectoryAsync(AVATAR_CACHE_DIR, {
+      intermediates: true
     });
   }
 };
@@ -123,7 +123,7 @@ export const getCacheTotalSize = async (): Promise<number> => {
  */
 export const cleanupExpiredCache = async (): Promise<void> => {
   const keys = getAllCacheKeys();
-  
+
   for (const key of keys) {
     const metadata = getCacheMetadata(key);
     if (!metadata || !isCacheValid(metadata)) {
@@ -159,7 +159,7 @@ export const cleanupCacheBySize = async (): Promise<void> => {
 
   for (const { key, metadata } of metadataEntries) {
     if (sizeToFree <= 0) break;
-    
+
     try {
       // Remove the file
       const fileInfo = await FileSystem.getInfoAsync(metadata!.localPath);
@@ -182,7 +182,7 @@ export const performCacheCleanup = async (): Promise<void> => {
   try {
     // First, remove expired entries
     await cleanupExpiredCache();
-    
+
     // Then, check if we need to free up space
     const currentSize = await getCacheTotalSize();
     if (currentSize > CACHE_CONFIG.MAX_CACHE_SIZE * CACHE_CONFIG.CLEANUP_THRESHOLD) {
@@ -203,11 +203,11 @@ export const clearAllCache = async (): Promise<void> => {
     if (dirInfo.exists) {
       await FileSystem.deleteAsync(AVATAR_CACHE_DIR);
     }
-    
+
     // Clear all metadata
     const keys = getAllCacheKeys();
     keys.forEach(key => removeCacheMetadata(key));
-    
+
     // Recreate directory
     await ensureCacheDirectory();
   } catch (error) {

@@ -12,7 +12,7 @@ import {
   performCacheCleanup,
   setCacheMetadata,
   removeCacheMetadata,
-} from '../utils/storage';
+} from '../utils/avatarStorage';
 
 export interface AvatarLoadResult {
   uri: string;
