@@ -1,76 +1,20 @@
-import { supabase } from '@/lib/supabase';
+import useLogin from '@/hooks/screens/useLogin';
 import { colors, spacing, typography } from '@/src/utils/theme';
-import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function LoginScreen() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Configure Google Sign-In
-    GoogleSignin.configure({
-      webClientId: "260927430287-auta4l17bmjkavn5n56tn0bdl4bdtrn1.apps.googleusercontent.com",
-      iosClientId: "260927430287-jjc4ai03n5mln36mbtpg17o5q3s1vf47.apps.googleusercontent.com",
-      offlineAccess: true,
-    });
-  }, []);
-
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    setError(null);
-    
-    try {
-      // Check if Google Play Services are available
-      await GoogleSignin.hasPlayServices();
-      
-      // Get the user's ID token
-      const userInfo = await GoogleSignin.signIn();
-      
-      if (!userInfo.data?.idToken) {
-        throw new Error('No ID token received from Google Sign-In');
-      }
-      
-      // Sign in to Supabase using the ID token
-      const { error } = await supabase.auth.signInWithIdToken({
-        provider: 'google',
-        token: userInfo.data.idToken,
-      });
-      
-      if (error) throw error;
-      
-      // The _layout.tsx will handle the session and redirect to the appropriate screen
-      
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      
-      // Handle specific Google Sign-In errors
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        setError('Sign-in was cancelled.');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        setError('Sign-in is already in progress.');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        setError('Google Play Services not available.');
-      } else {
-        setError('Failed to sign in with Google. Please try again.');
-      }
-      
-      setLoading(false);
-    }
-  };
+  const { loading, error, handleGoogleSignIn } = useLogin();
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Content */}
       <View style={styles.content}>
         <Text style={styles.title}>Continue with your Google Account</Text>
         <Text style={styles.subtitle}>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</Text>
         
-        {/* Google Sign In Button */}
         <TouchableOpacity 
           style={styles.googleButton}
           onPress={handleGoogleSignIn}
@@ -93,12 +37,10 @@ export default function LoginScreen() {
           )}
         </TouchableOpacity>
         
-        {/* Error message */}
         {error && (
           <Text style={styles.errorText}>{error}</Text>
         )}
         
-        {/* Terms and Conditions */}
         <View style={styles.termsContainer}>
           <Text style={styles.termsText}>
             By clicking continue you are agree with {'\n'} our{' '}
@@ -115,11 +57,10 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background, // Dark purple background
+    backgroundColor: colors.background,
   },
   backButton: {
     position: 'absolute',
-    // top: 16,
     left: 16,
     width: 40,
     height: 40,

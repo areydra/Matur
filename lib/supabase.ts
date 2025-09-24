@@ -45,7 +45,7 @@ export const hasCompletedProfile = async (userId: string) => {
       .maybeSingle(); // Use maybeSingle() to handle non-existent profiles
       
     if (error) throw error;
-    console.log('data: ', data);
+
     // Return false if no profile exists or name is empty
     return !!(data && data.name);
   } catch (error) {
