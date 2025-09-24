@@ -9,8 +9,8 @@ export default function useLogin() {
 
   useEffect(function initializeGoogleSignIn() {
     GoogleSignin.configure({
-      webClientId: "260927430287-auta4l17bmjkavn5n56tn0bdl4bdtrn1.apps.googleusercontent.com",
-      iosClientId: "260927430287-jjc4ai03n5mln36mbtpg17o5q3s1vf47.apps.googleusercontent.com",
+      webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID,
+      iosClientId: process.env.EXPO_PUBLIC_IOS_CLIENT_ID,
       offlineAccess: true,
     });
   }, []);
