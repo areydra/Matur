@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
-import { TouchableOpacity, View, Text } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+import { ChatListItemProps } from '../../types';
 import Avatar from '../Avatar';
 import Badge from '../Badge';
-import { ChatListItemProps } from '../../types';
 import { styles } from './styles';
 
 const formatTimeAgo = (dateString: string) => {
@@ -18,15 +18,14 @@ const formatTimeAgo = (dateString: string) => {
 
 const ChatListItem: React.FC<ChatListItemProps> = ({ 
   chat, 
-  participant, 
   onPress 
 }) => {
   const handlePress = () => {
-    onPress(chat.id);
+    onPress(chat);
   };
 
-  const hasUnread = chat.unread_count > 0;
-  const lastMessageTime = chat.last_message?.created_at || chat.updated_at;
+  const hasUnread = chat.count_unread_messages > 0;
+  const lastMessageTime = chat.last_message_created_at;
 
   return (
     <TouchableOpacity 
@@ -35,8 +34,8 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
       activeOpacity={0.7}
     >
       <Avatar
-        uri={participant.avatar_url}
-        name={participant.display_name}
+        uri={chat.participant_avatar_url}
+        name={chat.participant_name}
         size="medium"
         showOnlineStatus
       />
@@ -44,7 +43,7 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
       <View style={styles.contentContainer}>
         <View style={styles.headerRow}>
           <Text style={styles.name} numberOfLines={1}>
-            {participant.display_name}
+            {chat.participant_name}
           </Text>
           <Text style={styles.time}>
             {formatTimeAgo(lastMessageTime)}
@@ -56,10 +55,10 @@ const ChatListItem: React.FC<ChatListItemProps> = ({
             style={[styles.message, hasUnread && styles.unreadMessage]} 
             numberOfLines={1}
           >
-            {chat.last_message?.content || 'No messages yet'}
+            {chat.last_message || 'No messages yet'}
           </Text>
           {hasUnread && (
-            <Badge count={chat.unread_count} />
+            <Badge count={chat.count_unread_messages} />
           )}
         </View>
       </View>

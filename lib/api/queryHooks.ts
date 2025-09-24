@@ -2,8 +2,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { supabase } from '../supabase';
 import {
     GET_AVATAR,
+    GET_CHAT_SUMMARY,
     GET_PROFILE,
+    GET_SPECIFIC_PROFILE,
     LOGIN_WITH_GOOGLE_TOKEN,
+    POST_CHAT_SUMMARY,
     UPDATE_PROFILE,
     UPLOAD_AVATAR,
 } from './queryKeys';
@@ -85,6 +88,39 @@ export const useUploadAvatar = () => {
                 upsert: true
             });
             return response;
+        },
+    })
+}
+
+export const useGetChatSummaryQuery = () => {
+    return useQuery({
+        queryKey: [GET_CHAT_SUMMARY],
+        queryFn: async() => {
+            const { data } = await supabase.rpc('get_chat_summary');
+            return data;
+        },
+    })
+}
+
+export const useGetSpecificProfile = () => {
+    return useMutation({
+        mutationKey: [GET_SPECIFIC_PROFILE],
+        mutationFn: async ({ userId, name }: { userId: string; name: string }) => {
+            const response = await supabase.from('profiles').select(`*`).ilike('name', `%${name}%`).neq('id', userId);
+            return response;
+        },
+    })
+}
+
+export const usePostChatSummary = () => {
+    return useMutation({
+        mutationKey: [POST_CHAT_SUMMARY],
+        mutationFn: async (params: { owner_id: string; participant_id: string; }) => {
+            const { data } = await supabase.rpc('create_new_chat_summary_dm', {
+                p_owner_id: params.owner_id,
+                p_participant_id: params.participant_id
+            });
+            return data;
         },
     })
 }

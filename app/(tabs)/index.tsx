@@ -2,6 +2,7 @@ import { useHome } from '@/hooks/screens/useHome';
 import Avatar from '@/src/components/Avatar';
 import ChatListItem from '@/src/components/ChatListItem';
 import SearchInput from '@/src/components/SearchInput';
+import { ChatSummary } from '@/src/types';
 import { colors, fonts, spacing, typography } from '@/src/utils/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
@@ -21,10 +22,9 @@ const HomeScreen: React.FC = () => {
     handleProfilePress,
   } = useHome();
 
-  const renderChatItem = ({ item }: { item: { chat: any; participant: any } }) => (
+  const renderChatItem = ({ item }: { item: ChatSummary }) => (
     <ChatListItem
-      chat={item.chat}
-      participant={item.participant}
+      chat={item}
       onPress={handleChatPress}
     />
   );
@@ -104,7 +104,7 @@ const HomeScreen: React.FC = () => {
         contentContainerStyle={styles.chatListContent}
         data={filteredChats}
         renderItem={renderChatItem}
-        keyExtractor={(item) => item.chat.id}
+        keyExtractor={(item) => item.id}
         ItemSeparatorComponent={renderSeparator}
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}

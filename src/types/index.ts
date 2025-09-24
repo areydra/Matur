@@ -26,33 +26,23 @@ export interface UserProfile {
   id: string;
   email: string;
   name: string;
-  display_name?: string; // For backward compatibility with existing mock data
-  avatar_url?: string;
-  phone_number?: string;
-  description?: string;
-  last_seen_at?: string;
-  created_at?: string;
-  updated_at: string;
+  avatar_url: string;
+  phone_number: string;
+  description: string;
 }
 
-// Chat and Message types
-export interface Chat {
+// ChatSummary and Message types
+export interface ChatSummary {
   id: string;
-  participant_ids: string[];
-  last_message?: ChatMessage;
-  unread_count: number;
-  updated_at: string;
-  created_at: string;
-}
-
-export interface ChatMessage {
-  id: string;
+  owner_id: string;
+  participant_id: string;
   chat_id: string;
-  sender_id: string;
-  content: string;
-  message_type: 'text' | 'image' | 'video' | 'audio';
-  created_at: string;
-  updated_at: string;
+  participant_avatar_url: string;
+  participant_name: string;
+  last_message: string;
+  last_message_created_at: string;
+  last_message_from_id: string;
+  count_unread_messages: number;
 }
 
 export interface ChatParticipant {
@@ -93,9 +83,8 @@ export interface AvatarProps {
 }
 
 export interface ChatListItemProps {
-  chat: Chat;
-  participant: UserProfile;
-  onPress: (chatId: string) => void;
+  chat: ChatSummary;
+  onPress: (chat: ChatSummary) => void;
 }
 
 export interface SearchInputProps {

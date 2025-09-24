@@ -1,57 +1,54 @@
-import { supabase } from '@/lib/supabase';
+import { useGetChatSummaryQuery, useGetSpecificProfile, usePostChatSummary } from '@/lib/api/queryHooks';
+import { ChatSummary } from '@/src/types';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { filterChats, getChatParticipant, mockChats } from '../../src/services/mockData';
+import { useEffect, useState } from 'react';
 import { useUserStore } from '../../src/store/userStore';
 
 export const useHome = () => {
-  const { user, userProfile, chats, setUserProfile, setChats } = useUserStore();
+  const { userProfile } = useUserStore();
+  const { isLoading, data: messageSummary } = useGetChatSummaryQuery();
+  const { mutateAsync: findUserProfile } = useGetSpecificProfile();
+  const { mutateAsync: createChatSummary } = usePostChatSummary();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchMode, setIsSearchMode] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Initialize mock data
-  useEffect(() => {
-    const initializeData = () => {
-      setIsLoading(true);
-      
-      // Set current user profile
-      if (!userProfile && user?.id) {
-        supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single() 
-        .then(({data}) => {
-          setUserProfile(data);
-        })
-      }
-      
-      // Set mock chats
-      if (chats.length === 0) {
-        setChats(mockChats);
-      }
-      
-      setIsLoading(false);
-    };
-
-    // Simulate loading delay
-    setTimeout(initializeData, 500);
-  }, [userProfile, chats, setUserProfile, setChats]);
+  const [filteredChats, setFilteredChats] = useState<ChatSummary[]>([]);
 
   // Filter chats based on search query
-  const filteredChats = useMemo(() => {
-    if (!userProfile) return [];
-    
+  useEffect(() => {    
     if (!searchQuery.trim()) {
-      return chats.map(chat => ({
-        chat,
-        participant: getChatParticipant(chat, userProfile.id)!
-      })).filter(({ participant }) => participant);
+      setFilteredChats(messageSummary);
+      return;
     }
     
-    return filterChats(chats, searchQuery, userProfile.id);
-  }, [chats, searchQuery, userProfile]);
+    filterChats(messageSummary, searchQuery);
+  }, [messageSummary, searchQuery]);
+
+  const filterChats = (chats: ChatSummary[], query: string ) => {
+    const filteredChats = chats.filter(item => item.participant_name.toLowerCase().includes(query.toLowerCase()))
+
+    if (filteredChats.length || !userProfile?.id) {
+      setFilteredChats(filteredChats);
+      return;
+    }
+
+    findUserProfile({ name: query, userId: userProfile.id }).then(people => {
+        const newFilteredChats = people.data?.map(person => ({
+          id: '',
+          owner_id: '',
+          participant_id: person.id,
+          chat_id: '',
+          participant_avatar_url: person.avatar_url,
+          participant_name: person.name,
+          last_message: '',
+          last_message_created_at: new Date().toISOString(),
+          last_message_from_id: '',
+          count_unread_messages: 0,
+        }));
+
+        setFilteredChats(newFilteredChats?.length ? newFilteredChats : []);
+    });
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -64,9 +61,17 @@ export const useHome = () => {
     }
   };
 
-  const handleChatPress = (chatId: string) => {
-    console.log('Navigate to chat:', chatId);
+  const handleChatPress = (chat: ChatSummary) => {
+    if (!chat.id.length && userProfile?.id) {
+      createChatSummary({ owner_id: userProfile.id, participant_id: chat.participant_id }).then(data => {
+        // TODO: Navigate to chat screen when implemented
+        console.log('summary data: ', data);
+      });
+      return;
+    }
+
     // TODO: Navigate to chat screen when implemented
+    console.log('existing chat', chat);
   };
 
   const handleProfilePress = () => {
