@@ -1,4 +1,4 @@
-import { useProfile } from '@/hooks/screens/useProfile';
+import { useProfile } from '@/src/hooks/screens/useProfile';
 import { useAvatar } from '@/src/hooks/useAvatar';
 import { colors, spacing, typography } from '@/src/utils/theme';
 import { Image } from 'expo-image';

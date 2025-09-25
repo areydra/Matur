@@ -1,7 +1,7 @@
-import { useHome } from '@/hooks/screens/useHome';
 import Avatar from '@/src/components/Avatar';
 import ChatListItem from '@/src/components/ChatListItem';
 import SearchInput from '@/src/components/SearchInput';
+import { useHome } from '@/src/hooks/screens/useHome';
 import { ChatSummary } from '@/src/types';
 import { colors, fonts, spacing, typography } from '@/src/utils/theme';
 import { Ionicons } from '@expo/vector-icons';

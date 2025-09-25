@@ -1,7 +1,7 @@
+import { supabase } from '@/src/database/supabase';
+import { useNavigationStore } from '@/src/store/navigationStore';
+import { useUserStore } from '@/src/store/userStore';
 import { useState } from 'react';
-import { supabase } from '../../lib/supabase';
-import { useNavigationStore } from '../../src/store/navigationStore';
-import { useUserStore } from '../../src/store/userStore';
 
 export const useProfile = () => {
   const { userProfile, user, clearUser } = useUserStore();

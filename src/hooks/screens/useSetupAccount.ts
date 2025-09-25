@@ -1,4 +1,4 @@
-import { useGetAvatar, useUpdateProfile, useUploadAvatar } from '@/lib/api/queryHooks';
+import { useGetAvatar, useUpdateProfile, useUploadAvatar } from '@/src/services/api/queryHooks';
 import { useNavigationStore } from '@/src/store/navigationStore';
 import { useUserStore } from '@/src/store/userStore';
 import { decode } from 'base64-arraybuffer';

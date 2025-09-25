@@ -1,8 +1,8 @@
-import { useGetChatSummary, useGetSpecificProfile, usePostChatSummary } from '@/lib/api/queryHooks';
+import { useGetChatSummary, useGetSpecificProfile, usePostChatSummary } from '@/src/services/api/queryHooks';
+import { useUserStore } from '@/src/store/userStore';
 import { ChatSummary } from '@/src/types';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { useUserStore } from '../../src/store/userStore';
 
 export const useHome = () => {
   const { userProfile } = useUserStore();

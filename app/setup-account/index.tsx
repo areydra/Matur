@@ -1,4 +1,4 @@
-import useSetupAccount from '@/hooks/screens/useSetupAccount';
+import useSetupAccount from '@/src/hooks/screens/useSetupAccount';
 import { colors, spacing, typography } from '@/src/utils/theme';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -36,7 +36,7 @@ export default function SetupAccountScreen() {
         ) : (
           <View style={styles.cameraIconContainer}>
             <Image 
-              source={require('@/assets/images/camera-icon.svg')}
+              source={require('@/src/assets/images/camera-icon.svg')}
               style={styles.cameraIcon}
               contentFit="contain"
             />

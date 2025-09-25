@@ -1,17 +1,16 @@
+import { supabase } from '@/src/database/supabase';
 import * as FileSystem from 'expo-file-system';
-import { supabase } from '@/lib/supabase';
 import {
-  avatarCacheStorage,
   CACHE_CONFIG,
   CacheMetadata,
   ensureCacheDirectory,
-  getCacheKey,
   getCacheFilePath,
+  getCacheKey,
   getCacheMetadata,
   isCacheValid,
   performCacheCleanup,
-  setCacheMetadata,
   removeCacheMetadata,
+  setCacheMetadata
 } from '../utils/avatarStorage';
 
 export interface AvatarLoadResult {

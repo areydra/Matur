@@ -9,19 +9,19 @@ export default function OnboardingRoute() {
       id: 1,
       title: 'Easy chat with your friends',
       description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.',
-      illustration: require('@/assets/images/onboarding/slide_one.png'),
+      illustration: require('@/src/assets/images/onboarding/slide_one.png'),
     },
     {
       id: 2,
       title: 'Video call with your community',
       description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.',
-      illustration: require('@/assets/images/onboarding/slide_two.png'),
+      illustration: require('@/src/assets/images/onboarding/slide_two.png'),
     },
     {
       id: 3,
       title: 'Get notified when someone chat you',
       description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.',
-      illustration: require('@/assets/images/onboarding/slide_three.png'),
+      illustration: require('@/src/assets/images/onboarding/slide_three.png'),
     },
   ];
 

@@ -42,7 +42,7 @@ The flow consists of four main components:
 - `@/src/components/Header` - Custom header component
 - `@/src/store/navigationStore` - Navigation state management
 - `@/src/store/userStore` - User state management
-- `@/lib/supabase` - Supabase client for authentication
+- `@/src/database/supabase` - Supabase client for authentication
 
 #### 3.2 app/setup-account/index.tsx - Profile Setup Screen
 
@@ -100,7 +100,7 @@ const { error } = await supabase.storage
 - `expo-file-system` - File system operations
 - `base64-arraybuffer` - Base64 to ArrayBuffer conversion
 - `expo-linear-gradient` - Gradient button styling
-- `@/lib/supabase` - Database and storage operations
+- `@/src/database/supabase` - Database and storage operations
 - `@/src/store/navigationStore` - Navigation state management
 
 ### 4. src/store/ - State Management with Zustand
@@ -260,7 +260,7 @@ supabase.auth.onAuthStateChange(async (event, session) => {
 - `expo-router/Stack` for navigation structure
 - `expo-splash-screen` for splash screen management
 - `expo-status-bar` for status bar styling
-- `@/lib/supabase` - Supabase client and `hasCompletedProfile()` helper
+- `@/src/database/supabase` - Supabase client and `hasCompletedProfile()` helper
 - `@/src/store/userStore` - User and profile state management
 - `@/src/store/navigationStore` - Navigation stack management
 - `@/src/components/Header` - Custom header component
@@ -300,7 +300,7 @@ const slides: ProductTourSlide[] = [
     id: 1,
     title: 'Easy chat with your friends',
     description: 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque.',
-    illustration: require('@/assets/images/onboarding/slide_one.png'),
+    illustration: require('@/src/assets/images/onboarding/slide_one.png'),
   },
   // ... additional slides
 ];
@@ -359,7 +359,7 @@ const handleGoogleSignIn = async () => {
 
 **Dependencies**:
 - `@react-native-google-signin/google-signin` - Google OAuth integration
-- `@/lib/supabase` - Supabase client for authentication
+- `@/src/database/supabase` - Supabase client for authentication
 - `expo-image` - Image component for Google icon
 
 #### 2.4 app/onboarding/terms.tsx - Terms and Conditions Screen
@@ -473,12 +473,11 @@ graph TD;
 - Montserrat-Bold.ttf
 
 ### Image Assets
-- `@/assets/images/onboarding/slide_one.png`
-- `@/assets/images/onboarding/slide_two.png`
-- `@/assets/images/onboarding/slide_three.png`
-- `@/assets/images/google-icon.svg` - Google sign-in button icon
-- `@/assets/images/camera-icon.svg` - Profile image upload placeholder
-- `@/assets/images/camera-icon.png` - Alternative camera icon format
+- `@/src/assets/images/onboarding/slide_one.png`
+- `@/src/assets/images/onboarding/slide_two.png`
+- `@/src/assets/images/onboarding/slide_three.png`
+- `@/src/assets/images/google-icon.svg` - Google sign-in button icon
+- `@/src/assets/images/camera-icon.svg` - Profile image upload placeholder
 
 ### Environment Variables
 - **EXPO_PUBLIC_SUPABASE_URL**: Supabase project URL

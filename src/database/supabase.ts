@@ -1,6 +1,6 @@
+import * as storage from '@/src/utils/authStorage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
-import * as storage from './authStorage';
 
 // Environment variables from .env file
 export const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;

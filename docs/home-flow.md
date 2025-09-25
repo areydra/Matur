@@ -137,7 +137,7 @@ graph TD;
 ## Configurations and Dependencies
 
 ### Environment Variables
-- Supabase configuration via `@/lib/supabase`
+- Supabase configuration via `@/src/database/supabase`
 
 ### Key Dependencies
 - `expo-router` - Navigation between screens

@@ -169,7 +169,7 @@ export default HomeScreen;
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchData } from '../../src/services/queries';
-import { useDataStore } from '../../src/store/store';
+import { useDataStore } from '@/src/store/store';
 
 // Specific custom hook for Home route to encapsulate data fetching, state updates, and effects
 export const useHome = () => {

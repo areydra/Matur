@@ -4,7 +4,7 @@ export default {
     slug: "Matur",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./src/assets/images/icon.png",
     scheme: "matur",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
@@ -15,7 +15,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/icon.png",
+        foregroundImage: "./src/assets/images/icon.png",
         backgroundColor: "#FFFFFF"
       },
       edgeToEdgeEnabled: true,
@@ -24,14 +24,14 @@ export default {
     web: {
       bundler: "metro",
       output: "static",
-      favicon: "./assets/images/icon.png"
+      favicon: "./src/assets/images/icon.png"
     },
     plugins: [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          image: "./assets/images/icon-with-brand.png",
+          image: "./src/assets/images/icon-with-brand.png",
           imageWidth: 200,
           resizeMode: "contain",
           backgroundColor: "#0E0A47"

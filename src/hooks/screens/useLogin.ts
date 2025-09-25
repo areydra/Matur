@@ -1,4 +1,4 @@
-import { useLoginWithGoogleToken } from '@/lib/api/queryHooks';
+import { useLoginWithGoogleToken } from '@/src/services/api/queryHooks';
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { useEffect, useState } from 'react';
 

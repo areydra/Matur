@@ -98,7 +98,7 @@ const ProductTour: React.FC<ProductTourProps> = ({ slides, onComplete, onSkip })
         </View>
       </View>
       <Image
-        source={require('@/assets/images/onboarding/shape.png')}
+        source={require('@/src/assets/images/onboarding/shape.png')}
         style={styles.shape}
       />
     </SafeAreaView>

@@ -1,5 +1,3 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { supabase } from '../supabase';
 import {
     GET_AVATAR,
     GET_CHAT_SUMMARY,
@@ -9,7 +7,9 @@ import {
     POST_CHAT_SUMMARY,
     UPDATE_PROFILE,
     UPLOAD_AVATAR,
-} from './queryKeys';
+} from '@/src/constants/queryKeys';
+import { supabase } from '@/src/database/supabase';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
 export const useLoginWithGoogleToken = () => {
     return useMutation({

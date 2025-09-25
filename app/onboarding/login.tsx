@@ -1,4 +1,4 @@
-import useLogin from '@/hooks/screens/useLogin';
+import useLogin from '@/src/hooks/screens/useLogin';
 import { colors, spacing, typography } from '@/src/utils/theme';
 import { Image } from 'expo-image';
 import { Link } from 'expo-router';
@@ -21,7 +21,7 @@ export default function LoginScreen() {
           disabled={loading}
         >
           <Image 
-            source={require('@/assets/images/google-icon.svg')} 
+            source={require('@/src/assets/images/google-icon.svg')} 
             style={styles.googleIcon}
             contentFit="contain"
           />

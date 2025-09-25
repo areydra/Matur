@@ -1,6 +1,6 @@
-import { useGetProfile } from '@/lib/api/queryHooks';
-import { hasCompletedProfile, supabase } from '@/lib/supabase';
 import Header from '@/src/components/Header';
+import { hasCompletedProfile, supabase } from '@/src/database/supabase';
+import { useGetProfile } from '@/src/services/api/queryHooks';
 import { useNavigationStore } from '@/src/store/navigationStore';
 import { useUserStore } from '@/src/store/userStore';
 import {
@@ -23,11 +23,11 @@ SplashScreen.preventAutoHideAsync();
 
 function StackProvider() {
   const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-    'Montserrat-Regular': require('../assets/fonts/Montserrat-Regular.ttf'),
-    'Montserrat-Medium': require('../assets/fonts/Montserrat-Medium.ttf'),
-    'Montserrat-SemiBold': require('../assets/fonts/Montserrat-SemiBold.ttf'),
-    'Montserrat-Bold': require('../assets/fonts/Montserrat-Bold.ttf'),
+    SpaceMono: require('../src/assets/fonts/SpaceMono-Regular.ttf'),
+    'Montserrat-Regular': require('../src/assets/fonts/Montserrat-Regular.ttf'),
+    'Montserrat-Medium': require('../src/assets/fonts/Montserrat-Medium.ttf'),
+    'Montserrat-SemiBold': require('../src/assets/fonts/Montserrat-SemiBold.ttf'),
+    'Montserrat-Bold': require('../src/assets/fonts/Montserrat-Bold.ttf'),
   });
 
   const [isLoading, setIsLoading] = useState(true);

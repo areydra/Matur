@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase";
 import Header from "@/src/components/Header";
+import { supabase } from "@/src/database/supabase";
 import { useNavigationStore } from "@/src/store/navigationStore";
 import { useUserStore } from "@/src/store/userStore";
 import { Stack } from "expo-router";

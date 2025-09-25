@@ -1,12 +1,12 @@
-import { User } from '@supabase/supabase-js';
+import { AuthUser } from '@supabase/supabase-js';
 import { create } from 'zustand';
 import { UserProfile } from '../types';
 
 interface UserStore {
-  user: User | null;
+  user: AuthUser | null;
   userProfile: UserProfile | null;
   isLoading: boolean;
-  setUser: (user: User | null) => void;
+  setUser: (user: AuthUser | null) => void;
   setUserProfile: (profile: UserProfile | null) => void;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
   setLoading: (loading: boolean) => void;
@@ -18,7 +18,7 @@ export const useUserStore = create<UserStore>((set, get) => ({
   userProfile: null,
   isLoading: false,
   
-  setUser: (user: User | null) =>
+  setUser: (user: AuthUser | null) =>
     set({ user }),
   
   setUserProfile: (profile: UserProfile | null) =>
