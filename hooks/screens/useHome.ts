@@ -1,4 +1,4 @@
-import { useGetChatSummaryQuery, useGetSpecificProfile, usePostChatSummary } from '@/lib/api/queryHooks';
+import { useGetChatSummary, useGetSpecificProfile, usePostChatSummary } from '@/lib/api/queryHooks';
 import { ChatSummary } from '@/src/types';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -6,7 +6,7 @@ import { useUserStore } from '../../src/store/userStore';
 
 export const useHome = () => {
   const { userProfile } = useUserStore();
-  const { isLoading, data: messageSummary } = useGetChatSummaryQuery();
+  const { isLoading, data: messageSummary } = useGetChatSummary();
   const { mutateAsync: findUserProfile } = useGetSpecificProfile();
   const { mutateAsync: createChatSummary } = usePostChatSummary();
 

@@ -92,7 +92,7 @@ export const useUploadAvatar = () => {
     })
 }
 
-export const useGetChatSummaryQuery = () => {
+export const useGetChatSummary = () => {
     return useQuery({
         queryKey: [GET_CHAT_SUMMARY],
         queryFn: async() => {
