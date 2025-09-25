@@ -35,7 +35,7 @@ function StackProvider() {
   const { user, setUser, clearUser } = useUserStore();
   const { activeStack, setActiveStack, resetToOnboarding } = useNavigationStore();
   const setUserProfile = useUserStore(state => state.setUserProfile);
-  const { data: profileData } = useGetProfile(user?.id);
+  const { mutateAsync: getProfile } = useGetProfile();
 
   useEffect(function handleSplashScreen() {
     if (!loaded) {
@@ -50,12 +50,12 @@ function StackProvider() {
   }, [loaded, isLoading]);
 
   useEffect(function handleProfileData() {
-    if (!profileData) {
+    if (!user?.id) {
       return;
     }
 
-    setUserProfile(profileData);
-  }, [profileData]);
+    getProfile({ userId: user.id }).then(setUserProfile)
+  }, [user?.id]);
 
   useLayoutEffect(function initialization() {
     setStatusBarStyle('light');

@@ -25,10 +25,10 @@ export const useLoginWithGoogleToken = () => {
     })
 }
 
-export const useGetProfile = (userId?: string) => {
-    return useQuery({
-        queryKey: [GET_PROFILE, userId],
-        queryFn: async() => {
+export const useGetProfile = () => {
+    return useMutation({
+        mutationKey: [GET_PROFILE],
+        mutationFn: async ({ userId }: { userId: string; }) => {
             if (!userId) {
                 return null;
             }

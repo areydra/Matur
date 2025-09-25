@@ -12,7 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const HomeScreen: React.FC = () => {
   const {
     userProfile,
-    filteredChats,
+    chats,
     searchQuery,
     isSearchMode,
     isLoading,
@@ -102,7 +102,7 @@ const HomeScreen: React.FC = () => {
       <FlatList
         style={styles.chatList}
         contentContainerStyle={styles.chatListContent}
-        data={filteredChats}
+        data={chats}
         renderItem={renderChatItem}
         keyExtractor={(item) => item.id}
         ItemSeparatorComponent={renderSeparator}
