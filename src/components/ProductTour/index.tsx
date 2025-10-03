@@ -25,8 +25,6 @@ const ProductTour: React.FC<ProductTourProps> = ({ slides, onComplete, onSkip })
       scrollViewRef.current?.scrollTo({ x: nextSlide * width, animated: true });
       setCurrentSlide(nextSlide);
     } else {
-      // Last slide - navigate to login
-      console.log('Navigate to login screen');
       onComplete();
     }
   };

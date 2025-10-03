@@ -1,14 +1,19 @@
 import {
     GET_AVATAR,
     GET_CHAT_SUMMARY,
+    GET_EXPO_PUSH_NOTIFICATION,
     GET_PROFILE,
     GET_SPECIFIC_PROFILE,
     LOGIN_WITH_GOOGLE_TOKEN,
     POST_CHAT_SUMMARY,
+    POST_EXPO_PUSH_NOTIFICATION,
+    PUT_MARK_AS_READ_MESSAGES,
+    SEND_PUSH_NOTIFICATION,
     UPDATE_PROFILE,
     UPLOAD_AVATAR,
 } from '@/src/constants/queryKeys';
 import { supabase } from '@/src/database/supabase';
+import { IPushNotificationPayload } from '@/src/hooks/useExpoPushNotification';
 import { useMutation, useQuery } from '@tanstack/react-query';
 
 export const useLoginWithGoogleToken = () => {
@@ -121,6 +126,81 @@ export const usePostChatSummary = () => {
                 p_participant_id: params.participant_id
             });
             return data;
+        },
+    })
+}
+
+export const usePutMarkAsReadMessages = () => {
+    return useMutation({
+        mutationKey: [PUT_MARK_AS_READ_MESSAGES],
+        mutationFn: async ({
+            chatId,
+            ownerId,
+        } : {
+            chatId: string;
+            ownerId: string;
+        }) => {
+            const response = await supabase.from('chat_summary').update({ count_unread_messages: 0 }).eq('owner_id', ownerId).eq('chat_id', chatId).select()
+            return response;
+        },
+    })
+}
+
+export const usePostExpoPushNotification = () => {
+    return useMutation({
+        mutationKey: [POST_EXPO_PUSH_NOTIFICATION],
+        mutationFn: async ({
+            userId,
+            expoPushNotification,
+        } : {
+            userId: string;
+            expoPushNotification: string;
+        }) => {
+            const { data: existing } = await supabase
+                .from('notifications')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('expo_push_notification', expoPushNotification)
+                .single();
+
+            if (!existing) {
+                await supabase.from('notifications').insert({ user_id: userId, expo_push_notification: expoPushNotification });
+                return true;
+            }
+
+            return false;
+        },
+    })
+}
+
+export const useGetExpoPushNotification = () => {
+    return useMutation({
+        mutationKey: [GET_EXPO_PUSH_NOTIFICATION],
+        mutationFn: async ({ userId }: { userId: string; }) => {
+            if (!userId) {
+                return null;
+            }
+
+            const { data } = await supabase.from('notifications').select('*').eq('user_id', userId);
+            return data;
+        },
+    })
+}
+
+export const useSendPushNotification = () => {
+    return useMutation({
+        mutationKey: [SEND_PUSH_NOTIFICATION],
+        mutationFn: async (message: IPushNotificationPayload) => {
+            const response = await fetch('https://exp.host/--/api/v2/push/send', {
+                    method: 'POST',
+                    headers: {
+                    Accept: 'application/json',
+                        'Accept-encoding': 'gzip, deflate',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(message),
+                });
+            return response;
         },
     })
 }

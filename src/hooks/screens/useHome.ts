@@ -56,7 +56,6 @@ export const useHome = () => {
               updateChats(payload.new as ChatSummary);
               return;
           }
-          console.log('Change received!', payload)
         }
       )
 
@@ -120,14 +119,39 @@ export const useHome = () => {
   const handleChatPress = (chat: ChatSummary) => {
     if (!chat.id.length && userProfile?.id) {
       createChatSummary({ owner_id: userProfile.id, participant_id: chat.participant_id }).then(data => {
-        // TODO: Navigate to chat screen when implemented
-        console.log('summary data: ', data);
+        navigateToDMScreen({
+          id: data.participant_id,
+          chatId: data.chat_id,
+          name: data.participant_name,
+          avatar_url: data.participant_avatar_url,
+        })
       });
       return;
     }
 
-    // TODO: Navigate to chat screen when implemented
-    console.log('existing chat', chat);
+    navigateToDMScreen({
+      id: chat.participant_id,
+      chatId: chat.chat_id,
+      name: chat.participant_name,
+      avatar_url: chat.participant_avatar_url,
+    })
+  };
+
+  const navigateToDMScreen = (participant: {
+    id: string;
+    chatId: string;
+    name: string;
+    avatar_url: string;
+  }) => {
+    router.push({
+      pathname: `/chat/[receiverId]`,
+      params: {
+        chatId: participant.chatId,
+        receiverId: participant.id,
+        receiverName: participant.name,
+        receiverAvatarUrl: participant.avatar_url,
+      }
+    });
   };
 
   const handleProfilePress = () => {

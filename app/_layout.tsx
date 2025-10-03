@@ -1,5 +1,7 @@
 import Header from '@/src/components/Header';
 import { hasCompletedProfile, supabase } from '@/src/database/supabase';
+import useExpoPushNotification from '@/src/hooks/useExpoPushNotification';
+import useNotificationObserver from '@/src/hooks/useNotificationObserver';
 import { useGetProfile } from '@/src/services/api/queryHooks';
 import { useNavigationStore } from '@/src/store/navigationStore';
 import { useUserStore } from '@/src/store/userStore';
@@ -36,6 +38,17 @@ function StackProvider() {
   const { activeStack, setActiveStack, resetToOnboarding } = useNavigationStore();
   const setUserProfile = useUserStore(state => state.setUserProfile);
   const { mutateAsync: getProfile } = useGetProfile();
+  const { saveExpoPushNotificationIntoDB } = useExpoPushNotification();
+
+  useNotificationObserver(loaded && !isLoading);
+  
+  useEffect(function handleExpoPushNotification() {
+    if (!user?.id) {
+      return;
+    }
+
+    saveExpoPushNotificationIntoDB(user.id);
+  }, [user?.id]);
 
   useEffect(function handleSplashScreen() {
     if (!loaded) {
@@ -133,6 +146,7 @@ function StackProvider() {
               header: () => <Header/>,
             }}
           />
+          <Stack.Screen name="chat" />
         </Stack.Protected>
         <Stack.Screen name="+not-found" />
     </Stack>

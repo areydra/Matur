@@ -11,6 +11,10 @@ expo-env.d.ts
 .vscode/
 android/
 ios/
+!modules/expo-native-chat/android/
+!modules/expo-native-chat/ios/
+!modules/personal-chat-view/android/
+!modules/personal-chat-view/ios/
 
 # Native
 .kotlin/
@@ -41,3 +45,4 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
+GoogleService-Info.plist
