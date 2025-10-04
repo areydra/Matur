@@ -81,6 +81,7 @@ final class PersonalChatView: ExpoView {
     private lazy var tapGesture: UITapGestureRecognizer = {
         let gesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         gesture.cancelsTouchesInView = false
+        gesture.delegate = self
         return gesture
     }()
     
@@ -198,11 +199,6 @@ final class PersonalChatView: ExpoView {
     private func loadSampleData() {
         // messages = SampleData.shortConversation
     }
-    
-    // private func loadLongConversation() {
-    //messages = SampleData.longConversation
-    // loadDataAndPosition()
-    // }
     
     private func loadDataAndPosition() {
         adapter.performUpdates(animated: false, completion: nil)
@@ -340,7 +336,6 @@ final class PersonalChatView: ExpoView {
                 return
             }
             
-            // Create the chat models
             let chatModels = ChatModel.fromSupabaseResponse(
                 messages: [data.message],
                 userId: SupabaseManager.shared.getCurrentUserId()!
@@ -362,7 +357,6 @@ final class PersonalChatView: ExpoView {
                     "totalUnreadCount": data.totalUnreadCount
                 ])
             }
-
         }
     }
     
@@ -561,6 +555,20 @@ extension PersonalChatView: UIScrollViewDelegate {
 extension PersonalChatView: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         sendMessage()
+        return true
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension PersonalChatView: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // Don't dismiss keyboard if tapping on input container or its subviews
+        if touch.view == inputContainerView || 
+           touch.view == textField || 
+           touch.view == sendButton ||
+           inputContainerView.bounds.contains(touch.location(in: inputContainerView)) {
+            return false
+        }
         return true
     }
 }
