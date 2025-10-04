@@ -76,6 +76,13 @@ final class PersonalChatView: ExpoView {
         button.addTarget(self, action: #selector(sendButtonTapped), for: .touchUpInside)
         return button
     }()
+
+    // Change from stored property to lazy property
+    private lazy var tapGesture: UITapGestureRecognizer = {
+        let gesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
+        gesture.cancelsTouchesInView = false
+        return gesture
+    }()
     
     private lazy var adapter: ListAdapter = {
         ListAdapter(updater: ListAdapterUpdater(), viewController: nil)
@@ -115,6 +122,8 @@ final class PersonalChatView: ExpoView {
     
     private func setupConstraints() {
         inputContainerBottomConstraint = inputContainerView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+
+        addGestureRecognizer(tapGesture)
 
         NSLayoutConstraint.activate([
             // Collection View
@@ -311,6 +320,10 @@ final class PersonalChatView: ExpoView {
     // MARK: - Actions
     @objc private func sendButtonTapped() {
         sendMessage()
+    }
+
+    @objc func dismissKeyboard() {
+        endEditing(true)
     }
     
     private func sendMessage() {
