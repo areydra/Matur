@@ -23,10 +23,8 @@ const useNotificationObserver = (isAppReady: boolean) => {
                 handleNotification: async (notification): Promise<Notifications.NotificationBehavior> => {
                     const currentAppState = appState.current;
                     const receiverId = notification.request.content.data?.receiverId;
-
                     const shouldShow = !(pathname === `/chat/${receiverId}` && currentAppState === 'active');
                     return {
-                        shouldShowAlert: shouldShow,
                         shouldPlaySound: shouldShow,
                         shouldSetBadge: shouldShow,
                         shouldShowBanner: shouldShow,
@@ -40,12 +38,12 @@ const useNotificationObserver = (isAppReady: boolean) => {
     useEffect(function init() {
         const response = Notifications.getLastNotificationResponse();
 
-        // Handle notification from background
+        // Handle open notification from background
         if (response?.notification) {
             setNotificationData(response.notification.request.content.data);
         }
 
-        // Handle notification from foreground
+        // Handle open notification from foreground
         const subscription = Notifications.addNotificationResponseReceivedListener(response => {
             setNotificationData(response.notification.request.content.data);
         });

@@ -336,13 +336,13 @@ final class PersonalChatView: ExpoView {
         self.textField.text = ""
         
         Task { [weak self] in
-            guard let message = try? await SupabaseManager.shared.sendMessage(chatId: chatId, senderId: senderId, receiverId: receiverId, message: text) else {
+            guard let data = try? await SupabaseManager.shared.sendMessage(chatId: chatId, senderId: senderId, receiverId: receiverId, message: text) else {
                 return
             }
             
             // Create the chat models
             let chatModels = ChatModel.fromSupabaseResponse(
-                messages: [message],
+                messages: [data.message],
                 userId: SupabaseManager.shared.getCurrentUserId()!
             )
             
@@ -357,7 +357,10 @@ final class PersonalChatView: ExpoView {
                     self?.scrollToBottomAnimated()
                 }
 
-                self?.onSendMessage(["message": message])
+                self?.onSendMessage([
+                    "message": data.message,
+                    "totalUnreadCount": data.totalUnreadCount
+                ])
             }
 
         }

@@ -17,7 +17,7 @@ const useExpoPushNotification = () => {
     const { mutateAsync: getExpoPushNotification } = useGetExpoPushNotification()
     const { mutateAsync: mutateSendPushNotification } = useSendPushNotification()
 
-    async function sendPushNotification(targetId: string, payload: { title: string; body: string, data?: Record<string, any> }) {
+    async function sendPushNotification(targetId: string, payload: { title: string; body: string, badge: number, data?: Record<string, any> }) {
         getExpoPushNotification({ userId: targetId }).then(data => {
             if (!data) {
                 return;
@@ -83,9 +83,27 @@ const useExpoPushNotification = () => {
         throw new Error(errorMessage);
     }
 
+    async function clearChatNotifications(chatId: string) {
+        const notifications = await Notifications.getPresentedNotificationsAsync();
+        
+        const notificationsToRemove = notifications.filter(
+            n => n.request.content.data?.chatId === chatId
+        );
+        
+        for (const notification of notificationsToRemove) {
+            await Notifications.dismissNotificationAsync(notification.request.identifier);
+        }
+        
+        const currentBadge = await Notifications.getBadgeCountAsync();
+        const newBadge = Math.max(0, currentBadge - notificationsToRemove.length);
+
+        await Notifications.setBadgeCountAsync(newBadge);
+    }
+
     return {
         sendPushNotification,
         saveExpoPushNotificationIntoDB,
+        clearChatNotifications,
     }
 }
 

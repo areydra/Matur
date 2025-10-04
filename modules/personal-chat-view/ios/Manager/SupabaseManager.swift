@@ -98,7 +98,7 @@ class SupabaseManager {
         }
     }
 
-    func sendMessage(chatId: String, senderId: String, receiverId: String, message: String) async throws -> [String: Any]? {
+    func sendMessage(chatId: String, senderId: String, receiverId: String, message: String) async throws -> (message: [String: Any], totalUnreadCount: Int) {
         try ensureConfigured()
         guard let client = supabaseClient else {
             throw SupabaseManagerError.notConfigured
@@ -120,7 +120,13 @@ class SupabaseManager {
                 throw SupabaseManagerError.invalidResponse("Expected object response")
             }
             
-            return jsonObject
+            // Extract message and total_unread_count
+            guard let messageObject = jsonObject["message"] as? [String: Any],
+                let totalUnreadCount = jsonObject["total_unread_count"] as? Int else {
+                throw SupabaseManagerError.invalidResponse("Expected message and total_unread_count in response")
+            }
+            
+            return (message: messageObject, totalUnreadCount: totalUnreadCount)
         } catch {
             print("❌ Failed to send message: \(error)")
             throw SupabaseManagerError.databaseError(error)

@@ -12,6 +12,11 @@ export interface INewReceivedMessage {
   sender_id: string;
 };
 
+export interface IResponseSendMessage {
+  message: INewReceivedMessage;
+  totalUnreadCount: number;
+}
+
 export interface PersonalChatViewProps extends ViewProps {
   chatRoomCredentials: {
     senderId?: string;
@@ -24,15 +29,14 @@ export interface PersonalChatViewProps extends ViewProps {
     chatRangeFrom: number;
     chatRangeTo: number;
   };
-  onSendMessage: (message: any) => void;
+  onSendMessage: (data: any) => void;
 }
 
 export interface PersonalChatViewRef {
   addReceivedMessage: (message: INewReceivedMessage) => void;
 }
 
-const NativeView: React.ComponentType<PersonalChatViewProps> =
-  requireNativeViewManager('PersonalChatView');
+const NativeView = requireNativeViewManager('PersonalChatView');
 
 const PersonalChatViewModule = requireNativeModule('PersonalChatView');
 
@@ -50,6 +54,13 @@ export default React.forwardRef<PersonalChatViewRef, PersonalChatViewProps>(
     }));
 
     const { onSendMessage, chatRoomCredentials, ...rest } = props;
-    return <NativeView {...rest} chatRoomCredentials={chatRoomCredentials} onSendMessage={onSendMessage} />;
+    return (
+      <NativeView
+        {...rest}
+        ref={nativeRef}
+        chatRoomCredentials={chatRoomCredentials}
+        onSendMessage={onSendMessage}
+      />
+    );
   }
 );

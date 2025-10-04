@@ -1,4 +1,5 @@
 import { INewReceivedMessage, PersonalChatView, PersonalChatViewRef } from '@/modules/personal-chat-view';
+import { IResponseSendMessage } from '@/modules/personal-chat-view/src/PersonalChatView';
 import HeaderChat from '@/src/components/HeaderChat';
 import { supabase, supabaseKey, supabaseUrl } from '@/src/database/supabase';
 import useExpoPushNotification from '@/src/hooks/useExpoPushNotification';
@@ -30,7 +31,15 @@ export default function ChatScreen() {
   const [channel, setChannel] = useState<RealtimeChannel>();
   const chatViewRef = React.useRef<PersonalChatViewRef>(null);
   const { mutate: markAsReadMessages } = usePutMarkAsReadMessages();
-  const { sendPushNotification } = useExpoPushNotification();
+  const { sendPushNotification, clearChatNotifications } = useExpoPushNotification();
+
+  useEffect(function clearNotification() {
+    clearChatNotifications(chatId.toString());
+
+    return () => {
+      clearChatNotifications(chatId.toString());
+    }
+  }, [])
 
   useLayoutEffect(function setupSessionInNative() {
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
@@ -64,7 +73,7 @@ export default function ChatScreen() {
     };
   }, [senderId, receiverId, chatId]);
 
-  const sendBroadcastMessage = async (message: INewReceivedMessage) => {
+  const sendBroadcastMessage = async (data: IResponseSendMessage) => {
     if (!channel) {
       return;
     }
@@ -72,12 +81,13 @@ export default function ChatScreen() {
     await channel.send({
       type: 'broadcast',
       event: 'chat_message',
-      payload: message,
+      payload: data.message,
     });
 
     sendPushNotification(receiverId.toString(), {
       title: senderName as string,
-      body: message.message,
+      body: data.message.message,
+      badge: data.totalUnreadCount,
       data: {
         url: `/chat/[receiverId]`,
         chatId: chatId.toString(),
@@ -123,7 +133,10 @@ export default function ChatScreen() {
               paddingBottom: spacing.md,
             }}
             onSendMessage={(event) => {
-              sendBroadcastMessage(event.nativeEvent.message);
+              sendBroadcastMessage({
+                message: event.nativeEvent.message,
+                totalUnreadCount: event.nativeEvent.totalUnreadCount,
+              });
             }}
           />
         ) : (
