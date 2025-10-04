@@ -332,7 +332,9 @@ final class PersonalChatView: ExpoView {
               let chatId = self.chatId,
               let senderId = self.senderId,
               let receiverId = self.receiverId else { return }
-
+        
+        self.textField.text = ""
+        
         Task { [weak self] in
             guard let message = try? await SupabaseManager.shared.sendMessage(chatId: chatId, senderId: senderId, receiverId: receiverId, message: text) else {
                 return
