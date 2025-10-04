@@ -101,7 +101,7 @@ export const useGetChatSummary = () => {
     return useQuery({
         queryKey: [GET_CHAT_SUMMARY],
         queryFn: async() => {
-            const { data } = await supabase.rpc('get_chat_summary');
+            const { data } = await supabase.rpc('get_chat_summary').order('last_message_created_at', { ascending: false });
             return data;
         },
     })
