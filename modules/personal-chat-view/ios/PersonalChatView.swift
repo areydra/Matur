@@ -6,10 +6,10 @@ final class PersonalChatView: ExpoView {
     // MARK: - Types
     private enum Constants {
         static let collectionViewMargin: CGFloat = 16
-        static let inputContainerHeight: CGFloat = 60
+        static let inputContainerMinHeight: CGFloat = 60
+        static let inputContainerMaxHeight: CGFloat = 120
         static let sendButtonSize: CGFloat = 30
-        static let textFieldHeight: CGFloat = 44
-        static let textFieldMargin: CGFloat = 16
+        static let textViewMargin: CGFloat = 16
         static let buttonMargin: CGFloat = 12
         static let minimumLineSpacing: CGFloat = 8
         static let cornerRadius: CGFloat = 30
@@ -33,6 +33,8 @@ final class PersonalChatView: ExpoView {
     private var chatRangeTo: Int = 0
     private let onSendMessage = EventDispatcher()
     private var inputContainerBottomConstraint: NSLayoutConstraint!
+    private var collectionViewBottomConstraint: NSLayoutConstraint!
+    private var textViewHeightConstraint: NSLayoutConstraint!
     private var isLoadingFetchingNewMessage = false
     
     // MARK: - UI Components
@@ -51,19 +53,23 @@ final class PersonalChatView: ExpoView {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
         view.backgroundColor = Constants.Colors.inputContainer
-        view.layer.cornerRadius = Constants.inputContainerHeight / 2
+        view.layer.cornerRadius = Constants.cornerRadius
         return view
     }()
     
-    private lazy var textField: UITextField = {
-        let textField = UITextField()
-        textField.translatesAutoresizingMaskIntoConstraints = false
-        textField.backgroundColor = Constants.Colors.inputContainer
-        textField.textColor = .white
-        textField.font = .systemFont(ofSize: 14)
-        textField.attributedPlaceholder = createPlaceholder()
-        textField.delegate = self
-        return textField
+    private lazy var textView: UITextView = {
+        let textView = UITextView()
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.backgroundColor = .clear
+        textView.textColor = .white
+        textView.font = .systemFont(ofSize: 14)
+        textView.isScrollEnabled = false
+        textView.delegate = self
+        
+        textView.text = "Type Message..."
+        textView.textColor = Constants.Colors.placeholder
+        
+        return textView
     }()
     
     private lazy var sendButton: UIButton = {
@@ -94,8 +100,7 @@ final class PersonalChatView: ExpoView {
         super.init(appContext: appContext)
         setupViews()
         setupAdapter()
-        setupKeyboardObservers()
-        setupAppLifecycleObservers()
+        setupObservers()
     }
 
     deinit {
@@ -118,12 +123,15 @@ final class PersonalChatView: ExpoView {
     private func addSubviews() {
         addSubview(collectionView)
         addSubview(inputContainerView)
-        inputContainerView.addSubview(textField)
+        inputContainerView.addSubview(textView)
         inputContainerView.addSubview(sendButton)
     }
     
     private func setupConstraints() {
         inputContainerBottomConstraint = inputContainerView.bottomAnchor.constraint(equalTo: safeAreaLayoutGuide.bottomAnchor)
+        
+        // Create height constraint
+        textViewHeightConstraint = textView.heightAnchor.constraint(equalToConstant: 36)
 
         addGestureRecognizer(tapGesture)
 
@@ -132,23 +140,23 @@ final class PersonalChatView: ExpoView {
             collectionView.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor),
             collectionView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Constants.collectionViewMargin),
             collectionView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Constants.collectionViewMargin),
-            collectionView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor),
+            collectionView.bottomAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: -8),
 
             // Input Container
             inputContainerView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: Constants.collectionViewMargin),
             inputContainerView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -Constants.collectionViewMargin),
             inputContainerBottomConstraint,
-            inputContainerView.heightAnchor.constraint(equalToConstant: Constants.inputContainerHeight),
 
-            // Text Field
-            textField.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: Constants.textFieldMargin),
-            textField.centerYAnchor.constraint(equalTo: inputContainerView.centerYAnchor),
-            textField.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -Constants.buttonMargin),
-            textField.heightAnchor.constraint(equalToConstant: Constants.textFieldHeight),
+            // Text View with explicit height
+            textView.leadingAnchor.constraint(equalTo: inputContainerView.leadingAnchor, constant: Constants.textViewMargin),
+            textView.topAnchor.constraint(equalTo: inputContainerView.topAnchor, constant: 12),
+            textView.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -12),
+            textView.trailingAnchor.constraint(equalTo: sendButton.leadingAnchor, constant: -Constants.buttonMargin),
+            textViewHeightConstraint, // Add the height constraint
 
             // Send Button
-            sendButton.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -Constants.textFieldMargin),
-            sendButton.centerYAnchor.constraint(equalTo: inputContainerView.centerYAnchor),
+            sendButton.trailingAnchor.constraint(equalTo: inputContainerView.trailingAnchor, constant: -Constants.textViewMargin),
+            sendButton.bottomAnchor.constraint(equalTo: inputContainerView.bottomAnchor, constant: -15),
             sendButton.widthAnchor.constraint(equalToConstant: Constants.sendButtonSize),
             sendButton.heightAnchor.constraint(equalToConstant: Constants.sendButtonSize)
         ])
@@ -160,7 +168,7 @@ final class PersonalChatView: ExpoView {
         adapter.scrollViewDelegate = self
     }
 
-    private func setupKeyboardObservers() {
+    private func setupObservers() {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(keyboardWillShow(_:)),
@@ -174,9 +182,7 @@ final class PersonalChatView: ExpoView {
             name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
-    }
-    
-    private func setupAppLifecycleObservers() {
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAppEnteringForeground),
@@ -193,25 +199,9 @@ final class PersonalChatView: ExpoView {
         return layout
     }
     
-    private func createPlaceholder() -> NSAttributedString {
-        NSAttributedString(
-            string: "Type Message...",
-            attributes: [.foregroundColor: Constants.Colors.placeholder]
-        )
-    }
-    
     private func createSendButtonImage() -> UIImage? {
         let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .bold)
         return UIImage(systemName: "chevron.right", withConfiguration: symbolConfig)
-    }
-    
-    // MARK: - Data Loading
-    private func loadSampleData() {
-        // messages = SampleData.shortConversation
-    }
-    
-    private func loadDataAndPosition() {
-        adapter.performUpdates(animated: false, completion: nil)
     }
     
     // MARK: - Positioning Logic
@@ -352,13 +342,16 @@ final class PersonalChatView: ExpoView {
     }
     
     private func sendMessage() {
-        guard let text = textField.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let text = textView.text?.trimmingCharacters(in: .whitespacesAndNewlines),
               !text.isEmpty,
+              text != "Type Message...",
               let chatId = self.chatId,
               let senderId = self.senderId,
               let receiverId = self.receiverId else { return }
         
-        self.textField.text = ""
+        // Clear text view
+        textView.text = ""
+        textViewDidChange(textView)
         
         Task { [weak self] in
             guard let data = try? await SupabaseManager.shared.sendMessage(chatId: chatId, senderId: senderId, receiverId: receiverId, message: text) else {
@@ -375,7 +368,6 @@ final class PersonalChatView: ExpoView {
             }
             
             await MainActor.run {
-                self?.textField.text = ""
                 self?.messages.insert(chat, at: 0)
                 self?.adapter.performUpdates(animated: true) { [weak self] _ in
                     self?.scrollToBottomAnimated()
@@ -461,7 +453,7 @@ final class PersonalChatView: ExpoView {
                 self?.messages = messsages
                 self?.handleInitialPositioning()
                 print("✅ Messages loaded successfully: \(messsages.count) messages")
-            }            
+            }
         }
     }
 }
@@ -580,20 +572,40 @@ extension PersonalChatView: UIScrollViewDelegate {
     }
 }
 
-// MARK: - UITextFieldDelegate
-extension PersonalChatView: UITextFieldDelegate {
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        sendMessage()
-        return true
+// MARK: - UITextViewDelegate
+extension PersonalChatView: UITextViewDelegate {
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if textView.textColor == Constants.Colors.placeholder {
+            textView.text = ""
+            textView.textColor = .white
+        }
+    }
+    
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if textView.text.isEmpty {
+            textView.text = "Type Message..."
+            textView.textColor = Constants.Colors.placeholder
+        }
+    }
+    
+    func textViewDidChange(_ textView: UITextView) {
+        let size = textView.sizeThatFits(CGSize(width: textView.bounds.width, height: CGFloat.greatestFiniteMagnitude))
+        let newHeight = min(max(size.height, 36), 100) // Min 36, Max 100
+        
+        textViewHeightConstraint.constant = newHeight
+        textView.isScrollEnabled = newHeight >= 100
+        
+        UIView.animate(withDuration: 0.2) {
+            self.layoutIfNeeded()
+        }
     }
 }
 
 // MARK: - UIGestureRecognizerDelegate
 extension PersonalChatView: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        // Don't dismiss keyboard if tapping on input container or its subviews
-        if touch.view == inputContainerView || 
-           touch.view == textField || 
+        if touch.view == inputContainerView ||
+           touch.view == textView ||
            touch.view == sendButton ||
            inputContainerView.bounds.contains(touch.location(in: inputContainerView)) {
             return false
