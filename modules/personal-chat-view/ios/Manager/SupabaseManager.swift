@@ -167,6 +167,34 @@ class SupabaseManager {
         }
     }
     
+    func loadMessagesAfterId(chatId: String, lastMessageId: String) async throws -> [ChatModel] {
+        try ensureConfigured()
+        guard let client = supabaseClient else {
+            throw SupabaseManagerError.notConfigured
+        }
+        
+        do {            
+            let messageData = [
+                "p_chat_id": chatId,
+                "p_last_message_id": lastMessageId
+            ]
+
+            let response = try await client.rpc("get_messages_after_id", params: messageData).execute().data
+            
+            // Decode JSON data to [[String: Any]]
+            guard let jsonArray = try JSONSerialization.jsonObject(with: response) as? [[String: Any]] else {
+                throw SupabaseManagerError.invalidResponse("Expected array response")
+            }
+            
+            // ChatModel failed causing loaded 0 messages
+            let chatModels = ChatModel.fromSupabaseResponse(messages: jsonArray, userId: getCurrentUserId()!)
+            return chatModels
+        } catch {
+            throw SupabaseManagerError.databaseError(error)
+        }
+    }
+
+    
     func getCurrentUserId() -> String? {
         return supabaseClient?.auth.currentUser?.id.uuidString
     }

@@ -95,6 +95,7 @@ final class PersonalChatView: ExpoView {
         setupViews()
         setupAdapter()
         setupKeyboardObservers()
+        setupAppLifecycleObservers()
     }
 
     deinit {
@@ -171,6 +172,15 @@ final class PersonalChatView: ExpoView {
             self,
             selector: #selector(keyboardWillHide(_:)),
             name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+    
+    private func setupAppLifecycleObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppEnteringForeground),
+            name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
     }
@@ -310,6 +320,25 @@ final class PersonalChatView: ExpoView {
 
         UIView.animate(withDuration: animationDuration) {
             self.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func handleAppEnteringForeground() {
+        guard let chatId = self.chatId,
+              // due to messages got transform, need to using first instead of using last
+              let lastMessageId = self.messages.first?.id else {
+            return
+        }
+        
+        Task { [weak self] in
+            guard let messsages = try? await SupabaseManager.shared.loadMessagesAfterId(chatId: chatId, lastMessageId: lastMessageId) else {
+                return
+            }
+            
+            await MainActor.run {
+                self?.messages.insert(contentsOf: messsages, at: 0)
+                self?.handleInitialPositioning()
+            }
         }
     }
     

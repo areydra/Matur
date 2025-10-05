@@ -3,13 +3,15 @@ import { useGetChatSummary, useGetProfile, useGetSpecificProfile, usePostChatSum
 import useChatSummaryStore from '@/src/store/chatSummaryStore';
 import { useUserStore } from '@/src/store/userStore';
 import { ChatSummary } from '@/src/types';
+import { RealtimeChannel } from '@supabase/supabase-js';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { AppState } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 export const useHome = () => {
   const { userProfile } = useUserStore();
-  const { isLoading, data: messageSummary } = useGetChatSummary();
+  const { isLoading, data: messageSummary, refetch: refetchMessageSummary } = useGetChatSummary();
   const { mutateAsync: findUserProfile } = useGetSpecificProfile();
   const { mutateAsync: createChatSummary } = usePostChatSummary();
   const { mutateAsync: getProfile } = useGetProfile();
@@ -32,38 +34,84 @@ export const useHome = () => {
     setChats(messageSummary);
   }, [messageSummary]);
 
+  useEffect(function refetchSummaryChatDataOnForeground() {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        refetchMessageSummary();
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, []);
+
   useEffect(function listenChatSummary() {
     if (!userProfile?.id) {
       return;
     }
     
-    const chatRooms = supabase.channel(`chat-summary-rooms-${userProfile.id}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'chat_summary', filter: `owner_id=eq.${userProfile.id}` },
-        (payload) => {
-          switch (payload.eventType) {
-            case 'INSERT':
-              getProfile({ userId: payload.new.participant_id }).then(data => {
-                addChats([{
-                  ...payload.new,
-                  participant_avatar_url: data.avatar_url,
-                  participant_name: data.name
-                } as ChatSummary]);
-              });
-              return;
-            case 'UPDATE':
-              updateChats(payload.new as ChatSummary);
-              return;
+    let chatRooms: RealtimeChannel | null = null;
+    
+    const setupRealtimeConnection = () => {
+      // Unsubscribe existing connection if any
+      if (chatRooms) {
+        chatRooms.unsubscribe();
+      }
+      
+      // Create new connection
+      chatRooms = supabase.channel(`chat-summary-rooms-${userProfile.id}`)
+        .on(
+          'postgres_changes',
+          { 
+            event: '*', 
+            schema: 'public', 
+            table: 'chat_summary', 
+            filter: `owner_id=eq.${userProfile.id}` 
+          },
+          (payload) => {
+            switch (payload.eventType) {
+              case 'INSERT':
+                getProfile({ userId: payload.new.participant_id }).then(data => {
+                  addChats([{
+                    ...payload.new,
+                    participant_avatar_url: data.avatar_url,
+                    participant_name: data.name
+                  } as ChatSummary]);
+                });
+                return;
+              case 'UPDATE':
+                updateChats(payload.new as ChatSummary);
+                return;
+            }
           }
-        }
-      )
+        );
 
-    chatRooms.subscribe();
+      chatRooms.subscribe();
+    };
+    
+    // Initial setup
+    setupRealtimeConnection();
+    
+    // Listen for app state changes
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        console.log('App came to foreground - reconnecting realtime');
+        setupRealtimeConnection();
+      } else if (nextAppState === 'background') {
+        console.log('App going to background - disconnecting realtime');
+        if (chatRooms) {
+          chatRooms.unsubscribe();
+        }
+      }
+    });
 
     return () => {
-      chatRooms.unsubscribe();
-    }
+      if (chatRooms) {
+        chatRooms.unsubscribe();
+      }
+      subscription?.remove();
+    };
   }, [userProfile?.id]);
 
   useEffect(function searchSummaryChatData() {
