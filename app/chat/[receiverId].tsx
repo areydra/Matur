@@ -4,11 +4,12 @@ import HeaderChat from '@/src/components/HeaderChat';
 import { supabase, supabaseKey, supabaseUrl } from '@/src/database/supabase';
 import useExpoPushNotification from '@/src/hooks/useExpoPushNotification';
 import { usePutMarkAsReadMessages } from '@/src/services/api/queryHooks';
+import NotificationService from '@/src/services/NotificationService';
 import { useUserStore } from '@/src/store/userStore';
 import { spacing } from '@/src/utils/theme';
 import { RealtimeChannel } from '@supabase/realtime-js';
-import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
+import React, { useCallback, useEffect, useLayoutEffect, useState } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useShallow } from 'zustand/react/shallow';
@@ -32,6 +33,16 @@ export default function ChatScreen() {
   const chatViewRef = React.useRef<PersonalChatViewRef>(null);
   const { mutate: markAsReadMessages } = usePutMarkAsReadMessages();
   const { sendPushNotification, clearChatNotifications } = useExpoPushNotification();
+
+  useFocusEffect(
+    useCallback(() => {
+      NotificationService.setCurrentChat(receiverId.toString());
+
+      return () => {
+          NotificationService.setCurrentChat(null);
+      };
+    }, [receiverId])
+  );
 
   useEffect(function clearNotification() {
     clearChatNotifications(chatId.toString());

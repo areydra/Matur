@@ -1,6 +1,6 @@
 import * as Notifications from 'expo-notifications';
-import { RelativePathString, router, useFocusEffect, usePathname } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { RelativePathString, router, usePathname } from 'expo-router';
+import { useEffect, useState } from 'react';
 
 interface NotificationData {
     url?: string;
@@ -10,30 +10,15 @@ interface NotificationData {
     receiverAvatarUrl?: string;
 }
 
-import { AppState } from 'react-native';
+import NotificationService from '@/src/services/NotificationService';
 
 const useNotificationObserver = (isAppReady: boolean) => {
     const pathname = usePathname();
     const  [notificationData, setNotificationData] = useState<NotificationData>();
-    const appState = useRef(AppState.currentState);
 
-    useFocusEffect(
-        function handleNotification(){
-            Notifications.setNotificationHandler({
-                handleNotification: async (notification): Promise<Notifications.NotificationBehavior> => {
-                    const currentAppState = appState.current;
-                    const receiverId = notification.request.content.data?.receiverId;
-                    const shouldShow = !(pathname === `/chat/${receiverId}` && currentAppState === 'active');
-                    return {
-                        shouldPlaySound: shouldShow,
-                        shouldSetBadge: shouldShow,
-                        shouldShowBanner: shouldShow,
-                        shouldShowList: shouldShow,
-                    };
-                },
-            });
-        }
-    );
+    useEffect(function initNotificationService() {
+        NotificationService;
+    }, []);
 
     useEffect(function init() {
         const response = Notifications.getLastNotificationResponse();
